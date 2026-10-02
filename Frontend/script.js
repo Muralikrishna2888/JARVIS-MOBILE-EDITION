@@ -1,5 +1,5 @@
 // ===== 1. API KEY & MODELS =====
-const API_KEY = "Enter your GEMINI API KEY";
+const API_KEY = "AQ.Ab8RN6Iu6NtFweAgKmTwnBV8VE4zFBI9xAnqy8-tXhi03Mkdrg";
 const MODELS = ["gemini-3.6-flash", "gemini-3.5-flash"];
 
 // ===== 2. DOM ELEMENTS =====
