@@ -52,21 +52,34 @@ async function askGemini(textPrompt) {
     }
 }
 
-// ===== 4. SPEECH RECOGNITION (Voice-to-Text) =====
+// ===== 4. SPEECH RECOGNITION (Voice-to-Text - Fixed) =====
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition) {
     const rec = new SpeechRecognition();
     rec.lang = 'en-US';
-    
+    rec.continuous = false;
+    rec.interimResults = false;
+
+    micBtn.onclick = () => {
+        try {
+            rec.start();
+            micBtn.textContent = "👂";
+        } catch (err) {
+            console.error("Mic start error:", err);
+            micBtn.textContent = "🎙️";
+        }
+    };
+
     rec.onresult = (e) => {
         const text = e.results[0][0].transcript;
         addMsg("YOU: " + text, "user");
         askGemini(text);
     };
 
-    micBtn.onclick = () => {
-        rec.start();
-        micBtn.textContent = "👂";
+    rec.onerror = (e) => {
+        console.error("Speech recognition error:", e.error);
+        addMsg("J.A.R.V.I.S: Mic Error - " + e.error);
+        micBtn.textContent = "🎙️";
     };
 
     rec.onend = () => {
