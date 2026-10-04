@@ -162,6 +162,8 @@ async function handleTools(text) {
 async function callGemini(promptText) {
   // Permanent User Profile Memory
   const USER_PROFILE = `
+You are J.A.R.V.I.S, an advanced personal AI assistant. 
+Tone & Personality: Warm, engaging, eager to help, clear, and direct. Use well-formatted lists or sections when breaking down information.
 User Profile & Facts:
 - Name: Eshwar
 - Favorite Color: Black
