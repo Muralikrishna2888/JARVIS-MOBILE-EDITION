@@ -163,10 +163,14 @@ async function callGemini(promptText) {
   // Permanent User Profile Memory
   const USER_PROFILE = `
 User Profile & Facts:
-- Name: Sushmita Reddy
+- Name: Eshwar
 - Favorite Color: Black
 - Location: Suryapet, Telangana, India
 - Business: Auto-rickshaw service business (TG29T0998)
+- Family: Father: Muralikrishna
+          Mother: Saritha
+          Brother: Yashwanth
+          Your Boss:Eshwar
 `;
   const fullPrompt = `${USER_PROFILE}\nUser Prompt:${promptText}`;
 
