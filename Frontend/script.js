@@ -160,12 +160,22 @@ async function handleTools(text) {
 }
 
 async function callGemini(promptText) {
+  // Permanent User Profile Memory
+  const USER_PROFILE = `
+User Profile & Facts:
+- Name: Sushmita Reddy
+- Favorite Color: Black
+- Location: Suryapet, Telangana, India
+- Business: Auto-rickshaw service business (TG29T0998)
+`;
+  const fullPrompt = `${USER_PROFILE}\nUser Prompt:${promptText}`;
+
   for (const model of MODELS) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: promptText }] }] })
+        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
       });
       const data = await res.json();
       if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
@@ -242,4 +252,3 @@ document.querySelectorAll('.prompt-card').forEach(card => {
     if (promptText) askJarvis(promptText);
   });
 });
-                                                                                                                                                                              
