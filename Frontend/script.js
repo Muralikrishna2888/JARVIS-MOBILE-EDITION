@@ -376,39 +376,65 @@ function speak(text) {
   window.speechSynthesis.speak(u);
 }
 
-// ===== 6. VOICE RECOGNITION (MOBILE OPTIMIZED) =====
+// ===== 6. ROBUST VOICE RECOGNITION (MOBILE OPTIMIZED) =====
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
 if (SpeechRecognition && micBtn) {
-  const rec = new SpeechRecognition();
-  rec.lang = 'en-US';
-  rec.continuous = false;
-  rec.interimResults = false;
+  const recognition = new SpeechRecognition();
+  recognition.lang = 'en-US';
+  recognition.continuous = false;
+  recognition.interimResults = false;
+
+  let isListening = false;
 
   micBtn.addEventListener('click', async () => {
+    if (isListening) {
+      try { recognition.stop(); } catch (e) {}
+      return;
+    }
+
     try {
+      // Force explicit microphone permission prompt on mobile browsers
       await navigator.mediaDevices.getUserMedia({ audio: true });
+      
       micBtn.style.color = 'var(--accent)';
-      rec.start();
-    } catch (err) { 
-      alert("Microphone hardware access blocked: " + err.message); 
+      micBtn.classList.add('listening-active'); // Adds visual glow if you have CSS for it
+      isListening = true;
+      
+      recognition.start();
+    } catch (err) {
+      alert("Microphone hardware access blocked or unavailable: " + err.message);
+      micBtn.style.color = '';
+      isListening = false;
     }
   });
 
-  rec.onresult = (e) => {
-    const speechText = e.results[0][0].transcript;
+  recognition.onresult = (event) => {
+    const speechText = event.results[0][0].transcript;
     if (speechText) {
-      askJarvis(speechText);
+      input.value = speechText; // Shows what you said in the input box
+      askJarvis(speechText);    // Instantly sends it to J.A.R.V.I.S
     }
   };
 
-  rec.onerror = (event) => {
+  recognition.onerror = (event) => {
+    console.error("Speech recognition error:", event.error);
     micBtn.style.color = '';
+    micBtn.classList.remove('listening-active');
+    isListening = false;
   };
 
-  rec.onend = () => { 
-    micBtn.style.color = ''; 
+  recognition.onend = () => {
+    micBtn.style.color = '';
+    micBtn.classList.remove('listening-active');
+    isListening = false;
   };
+} else if (micBtn) {
+  micBtn.addEventListener('click', () => {
+    alert("Speech Recognition API is not supported on this browser. Please use Google Chrome or Edge, Boss.");
+  });
 }
+
 
 
 // ===== 7. EVENT LISTENERS & CONTROLS =====
