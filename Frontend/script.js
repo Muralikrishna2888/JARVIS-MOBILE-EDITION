@@ -222,11 +222,19 @@ async function askJarvis(textPrompt) {
 function speak(text) {
   if (!window.speechSynthesis) return;
   window.speechSynthesis.cancel();
-  const u = new SpeechSynthesisUtterance(text.replace(/[*_#`]/g, ''));
+  
+  // Clean text: remove emojis, asterisks, hashtags, and code backticks
+  const cleanText = text
+    .replace(/([\u2700-\u27BF]|[\uE000-\uF8FF]|\uD83C[\uDC00-\uDFFF]|\uD83D[\uDC00-\uDFFF]|[\u2011-\u26FF]|\uD83E[\uDD10-\uDDFF])/g, '')
+    .replace(/[*_#`]/g, '')
+    .trim();
+
+  const u = new SpeechSynthesisUtterance(cleanText);
   u.rate = 1.05;
   u.pitch = 0.82;
   window.speechSynthesis.speak(u);
 }
+
 
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition && micBtn) {
