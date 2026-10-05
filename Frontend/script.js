@@ -180,15 +180,11 @@ renderHistoryList();
 applyTheme(localStorage.getItem('jarvis_theme') || 'dark');
 MEMORY.forEach(m => add((m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text, m.role === 'user' ? 'user' : 'ai'));
 
-// ===== 3. UNIVERSAL COMMAND PARSER & EXECUTOR =====
+// ===== 3. UNIVERSAL COMMAND PARSER & EXECUTOR (ALL APPS NATIVE LAUNCHER) =====
 async function handleTools(text) {
   const t = text.toLowerCase();
   
-  // 1. DIRECT APP & CAMERA PROTOCOLS
-  if (t.includes('play it') || t.includes('playit')) {
-    window.open('playit://', '_blank');
-    return 'Launching Play It app, Boss.';
-  }
+  // 1. CAMERA & OPTICAL SENSOR PROTOCOL
   if (t.includes('camera') || t.includes('photo') || t.includes('snapshot')) {
     try {
       const stream = await navigator.mediaDevices.getUserMedia({ video: true });
@@ -214,22 +210,33 @@ async function handleTools(text) {
     }
   }
 
-  // 2. UNIVERSAL LAUNCH & SEARCH ENGINE (Handles "open X", "search for X", "go to X")
+  // 2. UNIVERSAL NATIVE APP LAUNCHER (Handles "open [Any App Name]")
   if (t.startsWith('open ') || t.startsWith('launch ') || t.startsWith('start ')) {
     const target = text.replace(/^(?:please\s+)?(?:open|launch|start)\s+/i, '').trim();
     if (target) {
-      // If it looks like a known app scheme
-      if (['whatsapp', 'instagram', 'telegram', 'spotify'].includes(target)) {
-        window.open(`${target}://`, '_blank');
-        return `Launching ${target}, Boss.`;
-      }
-      if (target === 'youtube') {
-        window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
-        return 'Opening YouTube interface, Boss.';
-      }
-      // Otherwise search/open as a web resource or platform
-      window.open(`https://www.google.com/search?q=${encodeURIComponent(target)}`, '_blank', 'noopener,noreferrer');
-      return `Executing launch sequence for ${target}, Boss.`;
+      const appClean = target.toLowerCase().replace(/[\s.-]+/g, '');
+      
+      // Special native mappings for common apps with unique package structures
+      let packageName = `com.${appClean}.${appClean}`;
+      if (appClean === 'youtube') packageName = 'com.google.android.youtube';
+      else if (appClean === 'whatsapp') packageName = 'com.whatsapp';
+      else if (appClean === 'instagram') packageName = 'com.instagram.android';
+      else if (appClean === 'telegram') packageName = 'org.telegram.messenger';
+      else if (appClean === 'spotify') packageName = 'com.spotify.music';
+      else if (appClean === 'playit') packageName = 'com.playit.videoplayer';
+
+      // Construct Android intent URI to trigger native app launch
+      const intentUrl = `intent://#Intent;package=${packageName};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end;`;
+      
+      // Fire intent to launch native app
+      window.location.href = intentUrl;
+
+      // Fallback web search in case the package isn't installed or scheme is blocked
+      setTimeout(() => {
+        window.open(`https://www.google.com/search?q=${encodeURIComponent(target + ' app')}`, '_blank', 'noopener,noreferrer');
+      }, 800);
+
+      return `Executing native launch sequence for ${target}, Boss.`;
     }
   }
 
@@ -237,18 +244,16 @@ async function handleTools(text) {
   if (t.startsWith('play ') || t.startsWith('watch ')) {
     const mediaQuery = text.replace(/^(?:please\s+)?(?:can you\s+)?(?:play|watch)\s+/i, '').trim();
     
-    // Check if it's a video, movie, trailer, or show -> Route to YouTube Videos
     if (t.includes('trailer') || t.includes('video') || t.includes('movie') || t.includes('clip') || t.includes('episode') || t.includes('teaser')) {
       window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(mediaQuery)}`, '_blank', 'noopener,noreferrer');
       return `Accessing visual feed for: ${mediaQuery}, Boss.`;
     }
     
-    // Otherwise, treat as an audio track -> Route to YouTube Music
     window.open(`https://music.youtube.com/search?q=${encodeURIComponent(mediaQuery)}`, '_blank', 'noopener,noreferrer');
     return `Engaging audio stream for: ${mediaQuery}, Boss.`;
   }
 
-  // 4. UNIVERSAL WEB SEARCH (Handles "search for X", "look up X", "find X")
+  // 4. UNIVERSAL WEB SEARCH
   if (t.startsWith('search ') || t.startsWith('look up ') || t.startsWith('find ')) {
     const searchQuery = text.replace(/^(?:please\s+)?(?:search for|search|look up|find)\s+/i, '').trim();
     window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank', 'noopener,noreferrer');
@@ -266,9 +271,8 @@ async function handleTools(text) {
     return 'Why do programmers prefer dark mode? Because light attracts bugs, Boss.';
   }
   
-  return null; // If no shortcut matches, it flows seamlessly into the advanced Gemini brain!
-        }
-
+  return null;
+}
 
 // ===== 4. ADVANCED CINEMATIC BRAIN (FULL CONVERSATION MEMORY INJECTED) =====
 async function callGemini(promptText) {
