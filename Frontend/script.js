@@ -153,9 +153,24 @@ async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
 
 async function handleTools(text) {
   const t = text.toLowerCase();
-  if (/^\s*(?:please\s+)?(?:open\s+youtube|youtube)(?:\s+please)?[.!?]*\s*$/i.test(text)) { window.open('https://youtube.com', '_blank'); return 'Opening YouTube, Boss.'; }
-  if (/^\s*(?:please\s+)?(?:open\s+google|google)(?:\s+please)?[.!?]*\s*$/i.test(text)) { window.open('https://google.com', '_blank'); return 'Opening Google, Boss.'; }
-  if (/\b(?:what time|current time|time now)\b/.test(t)) return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
+
+  // Flexible YouTube trigger (catches "open youtube", "can you open youtube", "youtube please", etc.)
+  if (t.includes('youtube')) {
+    window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
+    return 'Opening YouTube, Boss.';
+  }
+
+  // Flexible Google trigger
+  if (t.includes('google')) {
+    window.open('https://google.com', '_blank', 'noopener,noreferrer');
+    return 'Opening Google, Boss.';
+  }
+
+  // Time trigger
+  if (/\b(?:what time|current time|time now)\b/.test(t)) {
+    return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
+  }
+
   return null;
 }
 
