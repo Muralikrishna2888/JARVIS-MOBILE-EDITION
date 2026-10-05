@@ -282,20 +282,39 @@ function speak(text) {
   window.speechSynthesis.speak(u);
 }
 
-// ===== 6. VOICE RECOGNITION =====
+// ===== 6. VOICE RECOGNITION (MOBILE OPTIMIZED) =====
 const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
 if (SpeechRecognition && micBtn) {
   const rec = new SpeechRecognition();
   rec.lang = 'en-US';
+  rec.continuous = false;
+  rec.interimResults = false;
+
   micBtn.addEventListener('click', async () => {
     try {
       await navigator.mediaDevices.getUserMedia({ audio: true });
       micBtn.style.color = 'var(--accent)';
       rec.start();
-    } catch (err) { alert("Microphone hardware access blocked."); }
+    } catch (err) { 
+      alert("Microphone hardware access blocked: " + err.message); 
+    }
   });
-  rec.onresult = (e) => askJarvis(e.results[0][0].transcript);
-  rec.onend = () => { micBtn.style.color = ''; };
+
+  rec.onresult = (e) => {
+    const speechText = e.results[0][0].transcript;
+    if (speechText) {
+      askJarvis(speechText);
+    }
+  };
+
+  rec.onerror = (event) => {
+    console.error("Speech recognition error", event.error);
+    micBtn.style.color = '';
+  };
+
+  rec.onend = () => { 
+    micBtn.style.color = ''; 
+  };
 }
 
 // ===== 7. EVENT LISTENERS & CONTROLS =====
