@@ -221,7 +221,7 @@ User Profile & Facts:
 - Family Network: Father: Muralikrishna, Mother: Saritha, Brother: Yashwanth
 - Family Enterprise: Auto-rickshaw service business managed by father Muralikrishna, Vehicle ID: TG29T0998
 `;
-  const fullPrompt = `${JARVIS_PERSONA}\nDirective from Boss:${promptText}`;
+  const fullPrompt = `${JARVIS_PERSONA}\nDirective from Boss: ${promptText}`;
 
   for (const model of MODELS) {
     try {
@@ -238,6 +238,7 @@ User Profile & Facts:
   }
   throw new Error("Neural link unstable. All AI models busy.");
 }
+
 
 async function askJarvis(textPrompt) {
   if (!textPrompt.trim()) return;
