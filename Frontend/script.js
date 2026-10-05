@@ -184,10 +184,10 @@ MEMORY.forEach(m => add((m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text
 async function handleTools(text) {
   const t = text.toLowerCase();
   
-  // Music playback trigger
-  if (t.startsWith('play ') || t.includes('play song') || t.includes('play music')) {
-    const query = text.replace(/^(?:please\s+)?(?:play\s+song\s+|play\s+music\s+|play\s+)/i, '').trim();
-    if (query) {
+  // Force strict music trigger for any phrase containing "play"
+  if (t.includes('play')) {
+    const query = text.replace(/^(?:please\s+)?(?:can you\s+)?(?:play\s+song\s+|play\s+music\s+|play\s+)/i, '').trim();
+    if (query && query !== 'play' && query !== 'song' && query !== 'music') {
       window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer');
       return `Playing ${query}, Boss.`;
     } else {
@@ -247,6 +247,7 @@ async function handleTools(text) {
   
   return null;
 }
+
 
 // ===== 4. ADVANCED CINEMATIC BRAIN (USER PROFILE INJECTED) =====
 async function callGemini(promptText) {
