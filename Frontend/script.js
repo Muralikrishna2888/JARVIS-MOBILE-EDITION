@@ -186,7 +186,6 @@ async function handleTools(text) {
   
   // Music playback trigger
   if (t.startsWith('play ') || t.includes('play song') || t.includes('play music')) {
-    // Extract the song name if possible (e.g., "play shape of you" -> "shape of you")
     const query = text.replace(/^(?:please\s+)?(?:play\s+song\s+|play\s+music\s+|play\s+)/i, '').trim();
     if (query) {
       window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer');
@@ -197,19 +196,41 @@ async function handleTools(text) {
     }
   }
 
-  // Existing YouTube trigger
+  // App & Web Launchers
   if (t.includes('youtube')) {
     window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
     return 'Opening YouTube interface, Boss.';
   }
-  
-  // Existing Google trigger
   if (t.includes('google')) {
     window.open('https://google.com', '_blank', 'noopener,noreferrer');
     return 'Opening Google network, Boss.';
   }
+  if (t.includes('whatsapp')) {
+    window.open('whatsapp://', '_blank');
+    return 'Opening WhatsApp, Boss.';
+  }
+  if (t.includes('instagram')) {
+    window.open('instagram://', '_blank');
+    return 'Opening Instagram, Boss.';
+  }
+  if (t.includes('telegram')) {
+    window.open('tg://', '_blank');
+    return 'Opening Telegram, Boss.';
+  }
+  if (t.includes('spotify')) {
+    window.open('spotify://', '_blank');
+    return 'Opening Spotify, Boss.';
+  }
+  if (t.includes('camera')) {
+    window.open('content://media/internal/images/media', '_blank');
+    return 'Initiating camera protocol, Boss.';
+  }
+  if (t.includes('settings')) {
+    window.open('content://settings/system', '_blank');
+    return 'Opening system settings, Boss.';
+  }
   
-  // Existing Time check
+  // Time check
   if (/\b(?:what time|current time|time now)\b/.test(t)) {
     return 'The current time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
   }
@@ -326,7 +347,6 @@ if (SpeechRecognition && micBtn) {
   };
 
   rec.onerror = (event) => {
-    console.error("Speech recognition error", event.error);
     micBtn.style.color = '';
   };
 
@@ -334,6 +354,7 @@ if (SpeechRecognition && micBtn) {
     micBtn.style.color = ''; 
   };
 }
+
 
 // ===== 7. EVENT LISTENERS & CONTROLS =====
 if (sendBtn) sendBtn.addEventListener('click', () => askJarvis(input.value));
