@@ -184,28 +184,46 @@ MEMORY.forEach(m => add((m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text
 async function handleTools(text) {
   const t = text.toLowerCase();
   
-  // Flexible YouTube trigger
+  // Music playback trigger
+  if (t.startsWith('play ') || t.includes('play song') || t.includes('play music')) {
+    // Extract the song name if possible (e.g., "play shape of you" -> "shape of you")
+    const query = text.replace(/^(?:please\s+)?(?:play\s+song\s+|play\s+music\s+|play\s+)/i, '').trim();
+    if (query) {
+      window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer');
+      return `Playing ${query}, Boss.`;
+    } else {
+      window.open('https://music.youtube.com', '_blank', 'noopener,noreferrer');
+      return 'Opening YouTube Music, Boss.';
+    }
+  }
+
+  // Existing YouTube trigger
   if (t.includes('youtube')) {
     window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
     return 'Opening YouTube interface, Boss.';
   }
-  // Flexible Google trigger
+  
+  // Existing Google trigger
   if (t.includes('google')) {
     window.open('https://google.com', '_blank', 'noopener,noreferrer');
     return 'Opening Google network, Boss.';
   }
-  // Local Time
+  
+  // Existing Time check
   if (/\b(?:what time|current time|time now)\b/.test(t)) {
     return 'The current time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
   }
-  // System Diagnostics
+  
+  // Diagnostics
   if (t.includes('diagnostic') || t.includes('status')) {
     return 'All core protocols online. User Eshwar authenticated. Systems operating at peak efficiency, Boss.';
   }
-  // Standby routine
+  
+  // Joke
   if (t.includes('joke')) {
     return 'Why do programmers prefer dark mode? Because light attracts bugs, Boss.';
   }
+  
   return null;
 }
 
