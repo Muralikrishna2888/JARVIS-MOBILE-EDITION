@@ -32,7 +32,6 @@ button:disabled{opacity:.5;cursor:not-allowed}
 .history-item{display:flex;align-items:center;gap:9px;width:100%;min-height:39px;padding:8px 10px;border:1px solid transparent;border-radius:10px;background:transparent;color:var(--muted);text-align:left;font-size:12px;transition:background .16s ease,color .16s ease,border-color .16s ease}
 .history-item:hover{background:var(--panel-hover);color:var(--text)}
 .history-item[aria-current="true"]{background:var(--panel-hover);border-color:var(--border);color:var(--text)}
-.history-item svg{width:15px;height:15px;flex:0 0 15px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
 .history-item-label{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .sidebar-spacer{flex:1;min-height:20px}
 .sidebar-footer{border-top:1px solid var(--border);padding:12px 2px 0}
@@ -119,4 +118,5 @@ body.has-conversation .chat{display:flex;flex-direction:column}
 @keyframes messageIn{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:translateY(0)}}
 @keyframes activityIn{from{opacity:0;transform:translateY(4px)}to{opacity:1;transform:translateY(0)}}
 @keyframes settingsIn{from{opacity:0;transform:translateX(12px)}to{opacity:1;transform:translateX(0)}}
+        
   
