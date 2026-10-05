@@ -210,35 +210,46 @@ async function handleTools(text) {
     }
   }
 
-  // 2. UNIVERSAL NATIVE APP LAUNCHER (Handles "open [Any App Name]")
+    // 2. UNIVERSAL NATIVE APP LAUNCHER (Non-blocking)
   if (t.startsWith('open ') || t.startsWith('launch ') || t.startsWith('start ')) {
     const target = text.replace(/^(?:please\s+)?(?:open|launch|start)\s+/i, '').trim();
     if (target) {
       const appClean = target.toLowerCase().replace(/[\s.-]+/g, '');
       
-      // Special native mappings for common apps with unique package structures
       let packageName = `com.${appClean}.${appClean}`;
-      if (appClean === 'youtube') packageName = 'com.google.android.youtube';
-      else if (appClean === 'whatsapp') packageName = 'com.whatsapp';
-      else if (appClean === 'instagram') packageName = 'com.instagram.android';
-      else if (appClean === 'telegram') packageName = 'org.telegram.messenger';
-      else if (appClean === 'spotify') packageName = 'com.spotify.music';
-      else if (appClean === 'playit') packageName = 'com.playit.videoplayer';
-
-      // Construct Android intent URI to trigger native app launch
-      const intentUrl = `intent://#Intent;package=${packageName};action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;end;`;
+      let schemeUrl = `${appClean}://`;
       
-      // Fire intent to launch native app
-      window.location.href = intentUrl;
+      if (appClean === 'youtube') {
+        packageName = 'com.google.android.youtube';
+        schemeUrl = 'vnd.youtube://';
+      } else if (appClean === 'whatsapp') {
+        packageName = 'com.whatsapp';
+        schemeUrl = 'whatsapp://';
+      } else if (appClean === 'instagram') {
+        packageName = 'com.instagram.android';
+        schemeUrl = 'instagram://';
+      } else if (appClean === 'telegram') {
+        packageName = 'org.telegram.messenger';
+        schemeUrl = 'tg://';
+      } else if (appClean === 'spotify') {
+        packageName = 'com.spotify.music';
+        schemeUrl = 'spotify://';
+      } else if (appClean === 'playit' || appClean === 'play it') {
+        packageName = 'com.playit.videoplayer';
+        schemeUrl = 'playit://';
+      }
 
-      // Fallback web search in case the package isn't installed or scheme is blocked
-      setTimeout(() => {
-        window.open(`https://www.google.com/search?q=${encodeURIComponent(target + ' app')}`, '_blank', 'noopener,noreferrer');
-      }, 800);
+      // Use a hidden iframe to trigger the app scheme without breaking your current page or showing about:blank
+      const iframe = document.createElement('iframe');
+      iframe.style.display = 'none';
+      iframe.src = schemeUrl;
+      document.body.appendChild(iframe);
+      setTimeout(() => { iframe.remove(); }, 1000);
 
-      return `Executing native launch sequence for ${target}, Boss.`;
+      return `Executing launch sequence for ${target}, Boss.`;
     }
   }
+  
 
   // 3. UNIVERSAL MEDIA ENGINE (Automatically distinguishes videos, trailers, and music)
   if (t.startsWith('play ') || t.startsWith('watch ')) {
