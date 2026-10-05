@@ -180,74 +180,60 @@ renderHistoryList();
 applyTheme(localStorage.getItem('jarvis_theme') || 'dark');
 MEMORY.forEach(m => add((m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text, m.role === 'user' ? 'user' : 'ai'));
 
-// ===== 3. ROBUST TOOLS & ACTIONS =====
+// ===== UNIVERSAL COMMAND PARSER & EXECUTOR =====
 async function handleTools(text) {
   const t = text.toLowerCase();
   
-  // Force strict music trigger for any phrase containing "play"
-  if (t.includes('play')) {
-    const query = text.replace(/^(?:please\s+)?(?:can you\s+)?(?:play\s+song\s+|play\s+music\s+|play\s+)/i, '').trim();
-    if (query && query !== 'play' && query !== 'song' && query !== 'music') {
-      window.open(`https://music.youtube.com/search?q=${encodeURIComponent(query)}`, '_blank', 'noopener,noreferrer');
-      return `Playing ${query}, Boss.`;
-    } else {
-      window.open('https://music.youtube.com', '_blank', 'noopener,noreferrer');
-      return 'Opening YouTube Music, Boss.';
+  // 1. UNIVERSAL LAUNCH & SEARCH ENGINE (Handles "open X", "search for X", "go to X")
+  if (t.startsWith('open ') || t.startsWith('launch ') || t.startsWith('start ')) {
+    const target = text.replace(/^(?:please\s+)?(?:open|launch|start)\s+/i, '').trim();
+    if (target) {
+      // If it looks like a known app scheme
+      if (['whatsapp', 'instagram', 'telegram', 'spotify'].includes(target)) {
+        window.open(`${target}://`, '_blank');
+        return `Launching ${target}, Boss.`;
+      }
+      // Otherwise search/open as a web resource or platform
+      window.open(`https://www.google.com/search?q=${encodeURIComponent(target)}`, '_blank', 'noopener,noreferrer');
+      return `Executing launch sequence for ${target}, Boss.`;
     }
   }
 
-  // App & Web Launchers
-  if (t.includes('youtube')) {
-    window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
-    return 'Opening YouTube interface, Boss.';
+  // 2. UNIVERSAL MEDIA ENGINE (Automatically distinguishes videos, trailers, and music)
+  if (t.startsWith('play ') || t.startsWith('watch ')) {
+    const mediaQuery = text.replace(/^(?:please\s+)?(?:can you\s+)?(?:play|watch)\s+/i, '').trim();
+    
+    // Check if it's a video, movie, trailer, or show -> Route to YouTube Videos
+    if (t.includes('trailer') || t.includes('video') || t.includes('movie') || t.includes('clip') || t.includes('episode') || t.includes('teaser')) {
+      window.open(`https://www.youtube.com/results?search_query=${encodeURIComponent(mediaQuery)}`, '_blank', 'noopener,noreferrer');
+      return `Accessing visual feed for: ${mediaQuery}, Boss.`;
+    }
+    
+    // Otherwise, treat as an audio track -> Route to YouTube Music
+    window.open(`https://music.youtube.com/search?q=${encodeURIComponent(mediaQuery)}`, '_blank', 'noopener,noreferrer');
+    return `Engaging audio stream for: ${mediaQuery}, Boss.`;
   }
-  if (t.includes('google')) {
-    window.open('https://google.com', '_blank', 'noopener,noreferrer');
-    return 'Opening Google network, Boss.';
+
+  // 3. UNIVERSAL WEB SEARCH (Handles "search for X", "look up X", "find X")
+  if (t.startsWith('search ') || t.startsWith('look up ') || t.startsWith('find ')) {
+    const searchQuery = text.replace(/^(?:please\s+)?(?:search for|search|look up|find)\s+/i, '').trim();
+    window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank', 'noopener,noreferrer');
+    return `Querying global network for: ${searchQuery}, Boss.`;
   }
-  if (t.includes('whatsapp')) {
-    window.open('whatsapp://', '_blank');
-    return 'Opening WhatsApp, Boss.';
-  }
-  if (t.includes('instagram')) {
-    window.open('instagram://', '_blank');
-    return 'Opening Instagram, Boss.';
-  }
-  if (t.includes('telegram')) {
-    window.open('tg://', '_blank');
-    return 'Opening Telegram, Boss.';
-  }
-  if (t.includes('spotify')) {
-    window.open('spotify://', '_blank');
-    return 'Opening Spotify, Boss.';
-  }
-  if (t.includes('camera')) {
-    window.open('content://media/internal/images/media', '_blank');
-    return 'Initiating camera protocol, Boss.';
-  }
-  if (t.includes('settings')) {
-    window.open('content://settings/system', '_blank');
-    return 'Opening system settings, Boss.';
-  }
-  
-  // Time check
+
+  // 4. SYSTEM UTILITIES
   if (/\b(?:what time|current time|time now)\b/.test(t)) {
     return 'The current time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
   }
-  
-  // Diagnostics
   if (t.includes('diagnostic') || t.includes('status')) {
     return 'All core protocols online. User Eshwar authenticated. Systems operating at peak efficiency, Boss.';
   }
-  
-  // Joke
   if (t.includes('joke')) {
     return 'Why do programmers prefer dark mode? Because light attracts bugs, Boss.';
   }
   
-  return null;
+  return null; // If no shortcut matches, it flows seamlessly into the advanced Gemini brain!
 }
-
 
 // ===== 4. ADVANCED CINEMATIC BRAIN (USER PROFILE INJECTED) =====
 async function callGemini(promptText) {
