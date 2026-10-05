@@ -180,11 +180,41 @@ renderHistoryList();
 applyTheme(localStorage.getItem('jarvis_theme') || 'dark');
 MEMORY.forEach(m => add((m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text, m.role === 'user' ? 'user' : 'ai'));
 
-// ===== UNIVERSAL COMMAND PARSER & EXECUTOR =====
+// ===== 3. UNIVERSAL COMMAND PARSER & EXECUTOR =====
 async function handleTools(text) {
   const t = text.toLowerCase();
   
-  // 1. UNIVERSAL LAUNCH & SEARCH ENGINE (Handles "open X", "search for X", "go to X")
+  // 1. DIRECT APP & CAMERA PROTOCOLS
+  if (t.includes('play it') || t.includes('playit')) {
+    window.open('playit://', '_blank');
+    return 'Launching Play It app, Boss.';
+  }
+  if (t.includes('camera') || t.includes('photo') || t.includes('snapshot')) {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      let videoModal = document.getElementById('jarvis-camera-feed');
+      if (!videoModal) {
+        videoModal = document.createElement('video');
+        videoModal.id = 'jarvis-camera-feed';
+        videoModal.autoplay = true;
+        videoModal.playsInline = true;
+        videoModal.style.cssText = 'position:fixed; bottom:90px; right:20px; width:220px; height:160px; border-radius:14px; border:2px solid var(--accent); z-index:9999; background:#000; box-shadow:0 10px 30px rgba(0,0,0,0.5);';
+        document.body.appendChild(videoModal);
+
+        videoModal.addEventListener('click', () => {
+          stream.getTracks().forEach(track => track.stop());
+          videoModal.remove();
+        });
+      }
+      videoModal.srcObject = stream;
+      return 'Visual optical sensors online. Live feed active, Boss. (Tap video feed to close)';
+    } catch (err) {
+      window.open('content://media/internal/images/media', '_blank');
+      return 'Camera hardware permission restricted by browser sandbox. Launching system image directory instead, Boss.';
+    }
+  }
+
+  // 2. UNIVERSAL LAUNCH & SEARCH ENGINE (Handles "open X", "search for X", "go to X")
   if (t.startsWith('open ') || t.startsWith('launch ') || t.startsWith('start ')) {
     const target = text.replace(/^(?:please\s+)?(?:open|launch|start)\s+/i, '').trim();
     if (target) {
@@ -193,13 +223,17 @@ async function handleTools(text) {
         window.open(`${target}://`, '_blank');
         return `Launching ${target}, Boss.`;
       }
+      if (target === 'youtube') {
+        window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
+        return 'Opening YouTube interface, Boss.';
+      }
       // Otherwise search/open as a web resource or platform
       window.open(`https://www.google.com/search?q=${encodeURIComponent(target)}`, '_blank', 'noopener,noreferrer');
       return `Executing launch sequence for ${target}, Boss.`;
     }
   }
 
-  // 2. UNIVERSAL MEDIA ENGINE (Automatically distinguishes videos, trailers, and music)
+  // 3. UNIVERSAL MEDIA ENGINE (Automatically distinguishes videos, trailers, and music)
   if (t.startsWith('play ') || t.startsWith('watch ')) {
     const mediaQuery = text.replace(/^(?:please\s+)?(?:can you\s+)?(?:play|watch)\s+/i, '').trim();
     
@@ -214,14 +248,14 @@ async function handleTools(text) {
     return `Engaging audio stream for: ${mediaQuery}, Boss.`;
   }
 
-  // 3. UNIVERSAL WEB SEARCH (Handles "search for X", "look up X", "find X")
+  // 4. UNIVERSAL WEB SEARCH (Handles "search for X", "look up X", "find X")
   if (t.startsWith('search ') || t.startsWith('look up ') || t.startsWith('find ')) {
     const searchQuery = text.replace(/^(?:please\s+)?(?:search for|search|look up|find)\s+/i, '').trim();
     window.open(`https://www.google.com/search?q=${encodeURIComponent(searchQuery)}`, '_blank', 'noopener,noreferrer');
     return `Querying global network for: ${searchQuery}, Boss.`;
   }
 
-  // 4. SYSTEM UTILITIES
+  // 5. SYSTEM UTILITIES
   if (/\b(?:what time|current time|time now)\b/.test(t)) {
     return 'The current time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
   }
@@ -233,9 +267,10 @@ async function handleTools(text) {
   }
   
   return null; // If no shortcut matches, it flows seamlessly into the advanced Gemini brain!
-}
+        }
 
-// ===== 4. ADVANCED CINEMATIC BRAIN (USER PROFILE INJECTED) =====
+
+// ===== 4. ADVANCED CINEMATIC BRAIN (FULL CONVERSATION MEMORY INJECTED) =====
 async function callGemini(promptText) {
   const JARVIS_PERSONA = `
 You are J.A.R.V.I.S (Just A Rather Very Intelligent System), an elite cinematic AI assistant built for your Boss.
@@ -247,14 +282,43 @@ User Profile & Facts:
 - Family Network: Father: Muralikrishna, Mother: Saritha, Brother: Yashwanth
 - Family Enterprise: Auto-rickshaw service business managed by father Muralikrishna, Vehicle ID: TG29T0998
 `;
-  const fullPrompt = `${JARVIS_PERSONA}\nDirective from Boss: ${promptText}`;
+
+  // Build the message contents array using the rolling conversation history (MEMORY)
+  const contents = [];
+  
+  // Inject persona into the system instruction / first user prompt context
+  contents.push({
+    role: "user",
+    parts: [{ text: JARVIS_PERSONA + "\nAcknowledge these parameters, Boss." }]
+  });
+  contents.push({
+    role: "model",
+    parts: [{ text: "Parameters acknowledged. Systems online and ready, Boss." }]
+  });
+
+  // Append recent conversation memory so J.A.R.V.I.S remembers past context
+  const recentHistory = MEMORY.slice(-10); // Keep last 10 turns for context window efficiency
+  for (const m of recentHistory) {
+    contents.push({
+      role: m.role === 'user' ? 'user' : 'model',
+      parts: [{ text: m.text }]
+    });
+  }
+
+  // Add the current prompt if not already last
+  if (recentHistory[recentHistory.length - 1]?.text !== promptText) {
+    contents.push({
+      role: "user",
+      parts: [{ text: promptText }]
+    });
+  }
 
   for (const model of MODELS) {
     try {
       const res = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${API_KEY}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ contents: [{ parts: [{ text: fullPrompt }] }] })
+        body: JSON.stringify({ contents: contents })
       });
       const data = await res.json();
       if (data.candidates && data.candidates[0]?.content?.parts[0]?.text) {
