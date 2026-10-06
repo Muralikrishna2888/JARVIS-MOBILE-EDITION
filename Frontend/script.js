@@ -692,7 +692,6 @@ window.addEventListener('load', () => {
     initOrbs();
     setJarvisVisualState('IDLE');
 });
-
 // Integrate with your existing functions
 // Example: Inside askGemini function
 async function askGemini(p){
@@ -716,5 +715,4 @@ async function askGemini(p){
         chat.lastChild.innerText='J.A.R.V.I.S: ERROR - '+e.message;
         setTimeout(()=>setJarvisVisualState('IDLE'), 2000);
     }
-}
 
