@@ -8,6 +8,9 @@
   
   <link rel="stylesheet" href="style.css">
   
+  <!-- TAILWIND CSS CDN FOR UI PRESETS & WAKE WORD DOCK -->
+  <script src="https://cdn.tailwindcss.com"></script>
+
   <!-- ORBS VISUAL ENGINE -->
   <script src="https://cdn.jsdelivr.net/npm/orbs@latest/dist/orbs.min.js"></script>
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/orbs@latest/dist/orbs.css">
@@ -29,95 +32,188 @@
     }
   </style>
 </head>
-<body>
-  <div class="app-shell">
-    <aside class="sidebar" id="sidebar" aria-label="Main navigation">
-      <div class="sidebar-top">
-        <a class="brand" href="./">
-          <span class="brand-mark">
-            <svg viewBox="0 0 36 36"><circle cx="18" cy="18" r="15"/><path d="M18 7v22M7 18h22M10.2 10.2l15.6 15.6M25.8 10.2 10.2 25.8"/><circle cx="18" cy="18" r="4"/></svg>
+<body class="bg-[#0b0d12] text-slate-100 antialiased">
+  <div class="app-shell flex h-screen overflow-hidden">
+    <!-- SIDEBAR -->
+    <aside class="sidebar flex flex-col w-64 bg-slate-950/80 border-r border-slate-800/80 p-4 transition-all duration-300" id="sidebar" aria-label="Main navigation">
+      <div class="sidebar-top flex items-center justify-between mb-4">
+        <a class="brand flex items-center gap-2.5" href="./">
+          <span class="brand-mark w-8 h-8 rounded-xl bg-indigo-600/20 border border-indigo-500/40 flex items-center justify-center text-indigo-400">
+            <svg class="w-5 h-5" viewBox="0 0 36 36"><circle cx="18" cy="18" r="15" fill="none" stroke="currentColor" stroke-width="2"/><path d="M18 7v22M7 18h22M10.2 10.2l15.6 15.6M25.8 10.2 10.2 25.8" stroke="currentColor" stroke-width="2"/><circle cx="18" cy="18" r="4" fill="currentColor"/></svg>
           </span>
-          <span class="brand-copy"><strong>J.A.R.V.I.S</strong><small>PROTOCOL ALPHA</small></span>
+          <span class="brand-copy flex flex-col"><strong class="text-sm tracking-wide">J.A.R.V.I.S</strong><small class="text-[10px] text-indigo-400 font-mono">PROTOCOL ALPHA</small></span>
         </a>
-        <button class="icon-button sidebar-collapse" id="sidebar-toggle" type="button">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+        <button class="icon-button sidebar-collapse p-1.5 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60" id="sidebar-toggle" type="button">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
       </div>
 
-      <button class="new-chat" id="new-chat" type="button">
-        <span class="new-chat-icon">+</span><span>New protocol</span>
+      <button class="new-chat w-full py-2.5 px-3 rounded-xl bg-indigo-600/20 hover:bg-indigo-600/30 border border-indigo-500/40 text-indigo-300 text-xs font-semibold flex items-center justify-center gap-2 transition mb-4 shadow-sm" id="new-chat" type="button">
+        <span class="text-base leading-none">+</span><span>New protocol</span>
       </button>
 
-      <div class="history-heading"><span>PROTOCOLS</span><span class="history-count" id="history-count"></span></div>
-      <div class="history-list" id="history-list" role="group"></div>
+      <div class="history-heading flex items-center justify-between px-1 mb-2 text-[10px] font-mono tracking-wider text-slate-500">
+        <span>PROTOCOLS</span><span class="history-count" id="history-count"></span>
+      </div>
+      <div class="history-list flex-1 overflow-y-auto space-y-1 pr-1" id="history-list" role="group"></div>
       <div class="sidebar-spacer"></div>
 
-      <div class="sidebar-footer">
-        <div class="profile-row"><span class="profile-avatar">E</span><span class="profile-name">Eshwar</span><span class="profile-label">BOSS</span></div>
+      <div class="sidebar-footer pt-3 border-t border-slate-800/80">
+        <div class="profile-row flex items-center gap-2.5">
+          <span class="profile-avatar w-7 h-7 rounded-full bg-indigo-500/20 border border-indigo-500/40 flex items-center justify-center text-xs font-bold text-indigo-300">E</span>
+          <span class="profile-name text-xs font-medium text-slate-200">Eshwar</span>
+          <span class="profile-label ml-auto text-[9px] font-mono px-1.5 py-0.5 rounded bg-slate-800 text-indigo-400 border border-slate-700">BOSS</span>
+        </div>
       </div>
     </aside>
 
-    <main class="main-area">
-      <header class="topbar">
-        <button class="icon-button menu-button" id="menu-btn" type="button">
-          <svg viewBox="0 0 24 24"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    <!-- MAIN AREA -->
+    <main class="main-area flex-1 flex flex-col h-full bg-[#0b0d12] relative overflow-hidden">
+      <header class="topbar h-14 border-b border-slate-800/80 px-4 flex items-center justify-between bg-slate-950/40 backdrop-blur z-10">
+        <button class="icon-button menu-button p-2 rounded-lg text-slate-400 hover:text-white hover:bg-slate-800/60 md:hidden" id="menu-btn" type="button">
+          <svg class="w-5 h-5" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
         </button>
-        <div class="topbar-title"><span>J.A.R.V.I.S</span><span class="topbar-divider">/</span><span class="topbar-subtitle">System Online</span></div>
-        <div class="topbar-actions">
-          <span class="ready-badge"><span class="ready-dot"></span> ACTIVE</span>
-          <button class="icon-button clear-button" id="clear-btn" type="button">
-            <svg viewBox="0 0 24 24"><path d="M4 7h16M9 7V4h6v3m3 0-.8 13H6.8L6 7m4 3v6m4-6v6"/></svg>
+        <div class="topbar-title flex items-center gap-2 text-sm font-medium">
+          <span class="font-bold tracking-wider text-slate-200">J.A.R.V.I.S</span>
+          <span class="topbar-divider text-slate-600">/</span>
+          <span class="topbar-subtitle text-xs text-indigo-400 font-mono">System Online</span>
+        </div>
+        <div class="topbar-actions flex items-center gap-2">
+          <span class="ready-badge hidden sm:flex items-center gap-1.5 px-2 py-0.5 rounded-full bg-emerald-500/10 border border-emerald-500/20 text-[10px] font-mono text-emerald-400">
+            <span class="ready-dot w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse"></span> ACTIVE
+          </span>
+          <button class="icon-button clear-button p-2 rounded-lg text-slate-400 hover:text-rose-400 hover:bg-slate-800/60 transition" id="clear-btn" type="button" title="Clear Chat">
+            <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 7h16M9 7V4h6v3m3 0-.8 13H6.8L6 7m4 3v6m4-6v6"/></svg>
           </button>
         </div>
       </header>
 
-      <section class="conversation-stage" id="conversation-stage" tabindex="0">
-        <div class="welcome" id="welcome">
+      <section class="conversation-stage flex-1 overflow-y-auto p-4 flex flex-col items-center" id="conversation-stage" tabindex="0">
+        <div class="welcome max-w-2xl w-full my-auto text-center" id="welcome">
           <div id="jarvis-core-container" aria-hidden="true"></div>
           
-          <div class="welcome-copy">
-            <p class="eyebrow"><span></span> SYSTEMS FULLY OPERATIONAL</p>
-            <h1>At your service, Boss.</h1>
-            <p class="welcome-subtitle">Awaiting your command for diagnostics, queries, or directives.</p>
+          <div class="welcome-copy mb-6">
+            <p class="eyebrow inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-indigo-950/60 border border-indigo-500/30 text-[11px] font-mono text-indigo-300 mb-3">
+              <span class="w-1.5 h-1.5 rounded-full bg-indigo-400"></span> SYSTEMS FULLY OPERATIONAL
+            </p>
+            <h1 class="text-3xl font-bold tracking-tight text-slate-100 mb-2">At your service, Boss.</h1>
+            <p class="text-sm text-slate-400">Awaiting your command for diagnostics, queries, or directives.</p>
           </div>
-          <div class="prompt-grid">
-            <button class="prompt-card" type="button" data-prompt="Run system status diagnostic">
-              <span class="prompt-icon">✦</span><span><strong>Diagnostics</strong><small>Check system protocols</small></span><span class="prompt-arrow">↗</span>
+
+          <!-- Prompt Presets / One-Tap Voice Triggers -->
+          <div class="flex flex-wrap justify-center gap-1.5 mb-4">
+            <button onclick="setPromptPreset(0)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              💸 "Pay ₹650 to Mom on UPI"
             </button>
-            <button class="prompt-card" type="button" data-prompt="What is the current weather?">
-              <span class="prompt-icon">◌</span><span><strong>Local Weather</strong><small>Query atmospheric status</small></span><span class="prompt-arrow">↗</span>
+            <button onclick="setPromptPreset(1)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              💬 "Reply to Priya on WhatsApp"
             </button>
-            <button class="prompt-card" type="button" data-prompt="Open YouTube">
-              <span class="prompt-icon">◇</span><span><strong>Open YouTube</strong><small>Launch media interface</small></span><span class="prompt-arrow">↗</span>
+            <button onclick="setPromptPreset(2)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              🍕 "Order Cheese Burst Pizza"
             </button>
-            <button class="prompt-card" type="button" data-prompt="Tell me a joke">
-              <span class="prompt-icon">⌁</span><span><strong>Standby Routine</strong><small>Query witty remarks</small></span><span class="prompt-arrow">↗</span>
+            <button onclick="setPromptPreset(3)" class="text-xs px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-slate-300 border border-slate-700 transition">
+              🔋 "Turn on Battery Saver"
             </button>
+          </div>
+
+          <!-- Hands-Free Wake Word & Ambient Audio Neural System -->
+          <div class="mb-4 p-3 text-left rounded-2xl bg-gradient-to-r from-slate-900 via-indigo-950/40 to-slate-900 border border-indigo-500/30 shadow-xl relative overflow-hidden">
+            <div class="absolute -right-10 -bottom-10 w-32 h-32 bg-indigo-500/10 rounded-full blur-2xl pointer-events-none"></div>
+            
+            <div class="flex items-center justify-between gap-3 mb-2">
+              <div class="flex items-center gap-2">
+                <div id="wake-orb" class="w-8 h-8 rounded-full bg-indigo-600/30 border border-indigo-400 flex items-center justify-center relative shadow-lg shadow-indigo-500/20">
+                  <span id="wake-orb-ping" class="absolute inset-0 rounded-full bg-indigo-400/20 animate-ping hidden"></span>
+                  <svg id="wake-orb-icon" class="w-4 h-4 text-indigo-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/>
+                  </svg>
+                </div>
+                <div>
+                  <div class="flex items-center gap-1.5">
+                    <span class="text-xs font-bold text-slate-200">Hands-Free Ambient Wake Word</span>
+                    <span id="wake-mode-badge" class="text-[10px] px-2 py-0.5 rounded-full bg-slate-800 text-slate-400 border border-slate-700 font-mono">STANDBY</span>
+                  </div>
+                  <p class="text-[11px] text-slate-400">Say <strong class="text-indigo-300">"Hey Omni"</strong>, <strong class="text-indigo-300">"Jarvis"</strong> లేదా <strong class="text-emerald-400">"నమస్తే"</strong></p>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <button id="toggle-handsfree-btn" onclick="toggleHandsFreeMode()" class="px-3 py-1.5 rounded-xl bg-indigo-600/30 hover:bg-indigo-600/50 border border-indigo-500/50 text-indigo-200 text-xs font-medium flex items-center gap-1.5 transition active:scale-95 shadow-sm">
+                  <span class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                  <span id="handsfree-btn-text">Start Hands-Free</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Real-Time Audio Reactive Waveform & Speech Feedback -->
+            <div class="flex items-center gap-3 pt-2 border-t border-slate-800/80">
+              <div class="flex items-center gap-1 h-5 px-2 bg-slate-950/60 rounded-lg border border-slate-800 flex-1">
+                <div id="wave-1" class="w-1 bg-indigo-400 rounded-full h-1.5 transition-all duration-150"></div>
+                <div id="wave-2" class="w-1 bg-indigo-400 rounded-full h-2 transition-all duration-150"></div>
+                <div id="wave-3" class="w-1 bg-indigo-400 rounded-full h-3 transition-all duration-150"></div>
+                <div id="wave-4" class="w-1 bg-indigo-400 rounded-full h-1.5 transition-all duration-150"></div>
+                <div id="wave-5" class="w-1 bg-indigo-400 rounded-full h-2.5 transition-all duration-150"></div>
+                <span id="ambient-audio-status" class="text-[11px] font-mono text-slate-400 truncate ml-2">Mic idle. Click "Start Hands-Free".</span>
+              </div>
+
+              <!-- Voice Output / TTS Language Control -->
+              <div class="flex items-center gap-1.5">
+                <label class="text-[10px] text-slate-400 flex items-center gap-1 cursor-pointer select-none">
+                  <input type="checkbox" id="tts-voice-toggle" checked class="rounded border-slate-700 text-indigo-500 focus:ring-0 bg-slate-900">
+                  <span class="text-slate-300">Natural Voice</span>
+                </label>
+                <select id="tts-lang-select" class="bg-slate-900 text-slate-300 border border-slate-700 text-[10px] rounded px-1.5 py-0.5 focus:outline-none">
+                  <option value="te-IN">Telugu</option>
+                  <option value="en-IN" selected>English</option>
+                </select>
+              </div>
+            </div>
           </div>
         </div>
-        <div class="chat" id="chat" role="log" tabindex="0"></div>
+
+        <div class="chat w-full max-w-2xl space-y-3" id="chat" role="log" tabindex="0"></div>
       </section>
 
-      <footer class="composer-dock">
-        <div class="thinking-status" id="thinking-status" hidden>
-          <span class="thinking-orb" aria-hidden="true"><i class="thinking-ring"></i><i class="thinking-core"></i></span>
-          <span id="thinking-label">J.A.R.V.I.S is processing</span><span class="thinking-dots"><i></i><i></i><i></i></span>
+      <!-- COMPOSER DOCK -->
+      <footer class="composer-dock p-3 bg-slate-950/80 border-t border-slate-800/80 backdrop-blur">
+        <div class="thinking-status mb-2 text-xs text-indigo-400 font-mono flex items-center gap-2" id="thinking-status" hidden>
+          <span class="thinking-orb w-2 h-2 rounded-full bg-indigo-400 animate-ping"></span>
+          <span id="thinking-label">J.A.R.V.I.S is processing</span>
         </div>
-        <div class="composer-shell">
-          <textarea id="msg" rows="1" placeholder="Issue directive to J.A.R.V.I.S..."></textarea>
-          <div class="composer-actions">
-            <button class="composer-tool voice-button" id="mic-btn" type="button" title="Voice directive">
-              <svg viewBox="0 0 24 24"><rect x="9" y="3" width="6" height="12" rx="3"/><path d="M5.5 11.5a6.5 6.5 0 0 0 13 0M12 18v3m-4 0h8"/></svg>
+        <div class="composer-shell flex items-center gap-2 bg-slate-900 border border-slate-800 rounded-2xl p-2 shadow-inner">
+          <textarea id="msg" rows="1" class="flex-1 bg-transparent text-slate-100 placeholder-slate-500 text-sm focus:outline-none resize-none px-2 py-1" placeholder="Issue directive to J.A.R.V.I.S..."></textarea>
+          <div class="composer-actions flex items-center gap-1">
+            <button class="composer-tool cam-button p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition" id="cam-btn" type="button" title="Upload Image">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 9a2 2 0 012-2h.93a2 2 0 001.664-.89l.812-1.22A2 2 0 0110.07 4h3.86a2 2 0 011.664.89l.812 1.22A2 2 0 0018.07 7H19a2 2 0 012 2v9a2 2 0 01-2 2H5a2 2 0 01-2-2V9z"/><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 13a3 3 0 11-6 0 3 3 0 016 0z"/></svg>
             </button>
-            <button class="send-button" id="send" type="button" title="Transmit">
-              <svg viewBox="0 0 24 24"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>
+            <input type="file" id="img-input" accept="image/*" hidden>
+            <button class="composer-tool voice-button p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition" id="mic-btn" type="button" title="Voice directive">
+              <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 11a7 7 0 01-7 7m0 0a7 7 0 01-7-7m7 7v4m0 0H8m4 0h4m-4-8a3 3 0 01-3-3V5a3 3 0 116 0v6a3 3 0 01-3 3z"/></svg>
+            </button>
+            <button class="send-button p-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-500 text-white transition shadow-md shadow-indigo-600/30 flex items-center justify-center" id="send" type="button" title="Transmit">
+              <svg class="w-4 h-4" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 19V5m-6 6 6-6 6 6"/></svg>
             </button>
           </div>
         </div>
-        <p class="composer-note">ENTER TO TRANSMIT <span>·</span> J.A.R.V.I.S PROTOCOL V3.6</p>
+        <p class="composer-note text-center text-[10px] text-slate-500 font-mono mt-2">ENTER TO TRANSMIT <span class="mx-1">·</span> J.A.R.V.I.S PROTOCOL V3.6</p>
       </footer>
     </main>
   </div>
   <script src="script.js"></script>
+  <script>
+    function setPromptPreset(idx) {
+      const prompts = [
+        "Pay ₹650 to Mom on UPI",
+        "Reply to Priya on WhatsApp: Reach in 10 mins",
+        "Order Cheese Burst Pizza on QuickBite",
+        "Turn on Battery Saver & toggle Night mode"
+      ];
+      const input = document.getElementById('msg');
+      if (input && prompts[idx]) {
+        input.value = prompts[idx];
+        input.focus();
+      }
+    }
+  </script>
 </body>
 </html>
