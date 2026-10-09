@@ -1,4 +1,4 @@
-// ===== 1. API KEY =====
+// ===== 1. API KEY & GEMINI CLIENT SETUP =====
 let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
@@ -20,19 +20,18 @@ function extractInteractionText(data) {
 async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
   
-  const payload = { model: GEMINI_MODEL, input, store: false };
-  if (systemInstruction) payload.system_instruction = systemInstruction;
+  const payload = {
+    contents: [{ parts: [{ text: input }] }],
+    systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+  };
 
-  // CORS ఎర్రర్ రాకుండా corsproxy.io ని లింక్ ముందు యాడ్ చేస్తున్నాం బాస్
-  const targetUrl = 'https://generativelanguage.googleapis.com/v1beta/interactions';
-  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+  // ప్రొక్సీని తొలగించి డైరెక్ట్ గూగుల్ అఫీషియల్ v1 లింక్‌ వాડతున్నాం (CORS పోవడానికి v1 generateContent స్టాండర్డ్ ఎండ్‌పాయింట్)
+  const targetUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
-  const response = await fetch(proxyUrl, {
+  const response = await fetch(targetUrl, {
     method: 'POST',
     headers: {
-      'Content-Type': 'application/json',
-      'x-goog-api-key': API_KEY,
-      'Api-Revision': '2026-05-20'
+      'Content-Type': 'application/json'
     },
     body: JSON.stringify(payload)
   });
@@ -41,14 +40,16 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
   if (!response.ok || data?.error) {
     throw new Error(data?.error?.message || 'Gemini request failed (' + response.status + ').');
   }
-  
-  const reply = extractInteractionText(data);
-  if (!reply) throw new Error(data?.status === 'failed' ? 'Gemini could not complete this request.' : 'Gemini returned an empty response.');
-  return reply;
+
+  // అఫీషియల్ v1 రెస్పాన్స్ స్ట్రక్చర్ నుండి టెక్స్ట్ ఎక్స్‌ట్రాక్ట్ చేయడం
+  const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  if (!reply) throw new Error('Gemini returned an empty response.');
+  return reply.trim();
 }
 
-const GEMINI_MODEL = 'gemini-3.8-flash';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
+
 
 // ===== 2. MEMORY =====
 let MEMORY = [];
