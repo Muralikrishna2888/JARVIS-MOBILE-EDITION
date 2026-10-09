@@ -20,12 +20,25 @@ function extractInteractionText(data) {
 async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
   
+  // సరియైన v1 పేలోడ్ స్ట్రక్చర్ (parts అనేది లిస్ట్ రూపంలో ఉండాలి)
   const payload = {
-    contents: [{ parts: [{ text: input }] }],
-    systemInstruction: systemInstruction ? { parts: [{ text: systemInstruction }] } : undefined
+    contents: [
+      {
+        parts: [
+          { text: input }
+        ]
+      }
+    ]
   };
 
-  // ప్రొక్సీని తొలగించి డైరెక్ట్ గూగుల్ అఫీషియల్ v1 లింక్‌ వాડతున్నాం (CORS పోవడానికి v1 generateContent స్టాండర్డ్ ఎండ్‌పాయింట్)
+  if (systemInstruction) {
+    payload.system_instruction = {
+      parts: [
+        { text: systemInstruction }
+      ]
+    };
+  }
+
   const targetUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
   const response = await fetch(targetUrl, {
@@ -41,7 +54,6 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
     throw new Error(data?.error?.message || 'Gemini request failed (' + response.status + ').');
   }
 
-  // అఫీషియల్ v1 రెస్పాన్స్ స్ట్రక్చర్ నుండి టెక్స్ట్ ఎక్స్‌ట్రాక్ట్ చేయడం
   const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
   if (!reply) throw new Error('Gemini returned an empty response.');
   return reply.trim();
