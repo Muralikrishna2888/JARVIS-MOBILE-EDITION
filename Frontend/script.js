@@ -20,24 +20,16 @@ function extractInteractionText(data) {
 async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
   
-  // సరియైన v1 పేలోడ్ స్ట్రక్చర్ (parts అనేది లిస్ట్ రూపంలో ఉండాలి)
+  const combinedInput = systemInstruction ? `${systemInstruction}\n\nUser: ${input}` : input;
+  
+  // గూగుల్ ఏపీఐ అడిగే సరైన పేలోడ్ స్ట్రక్చర్
   const payload = {
-    contents: [
-      {
-        parts: [
-          { text: input }
-        ]
+    contents: {
+      parts: {
+        text: combinedInput
       }
-    ]
+    }
   };
-
-  if (systemInstruction) {
-    payload.system_instruction = {
-      parts: [
-        { text: systemInstruction }
-      ]
-    };
-  }
 
   const targetUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
 
