@@ -19,9 +19,15 @@ function extractInteractionText(data) {
 
 async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
+  
   const payload = { model: GEMINI_MODEL, input, store: false };
   if (systemInstruction) payload.system_instruction = systemInstruction;
-  const response = await fetch('https://generativelanguage.googleapis.com/v1beta/interactions', {
+
+  // CORS ఎర్రర్ రాకుండా corsproxy.io ని లింక్ ముందు యాడ్ చేస్తున్నాం బాస్
+  const targetUrl = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
+
+  const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -30,14 +36,17 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
     },
     body: JSON.stringify(payload)
   });
+
   const data = await response.json().catch(() => ({}));
   if (!response.ok || data?.error) {
     throw new Error(data?.error?.message || 'Gemini request failed (' + response.status + ').');
   }
+  
   const reply = extractInteractionText(data);
   if (!reply) throw new Error(data?.status === 'failed' ? 'Gemini could not complete this request.' : 'Gemini returned an empty response.');
   return reply;
 }
+
 const GEMINI_MODEL = 'gemini-3.8-flash';
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
