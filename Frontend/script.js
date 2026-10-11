@@ -31,7 +31,7 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
     }
   };
 
-  const targetUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-1.5-flash:generateContent?key=${API_KEY}`;
+  const targetUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-2.5-flash:generateContent?key=${API_KEY}`;
 
   const response = await fetch(targetUrl, {
     method: 'POST',
