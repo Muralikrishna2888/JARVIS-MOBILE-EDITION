@@ -5,33 +5,26 @@ if (!API_KEY) {
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-function extractInteractionText(data) {
-  if (typeof data?.output_text === 'string' && data.output_text.trim()) return data.output_text.trim();
-  const steps = Array.isArray(data?.steps) ? data.steps : Array.isArray(data?.outputs) ? data.outputs : [];
-  return steps
-    .filter(step => step && (step.type === 'model_output' || step.type === 'text' || !step.type))
-    .flatMap(step => Array.isArray(step.content) ? step.content : typeof step.text === 'string' ? [{ type: 'text', text: step.text }] : [])
-    .filter(part => part && (part.type === 'text' || typeof part.text === 'string') && typeof part.text === 'string')
-    .map(part => part.text)
-    .join('\n')
-    .trim();
-}
+const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
 async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
   
   const combinedInput = systemInstruction ? `${systemInstruction}\n\nUser: ${input}` : input;
   
-  // గూగుల్ ఏపీఐ అడిగే సరైన పేలోడ్ స్ట్రక్చర్
+  // సరియైన అరే (Array) స్ట్రక్చర్ పేలోడ్
   const payload = {
-    contents: {
-      parts: {
-        text: combinedInput
+    contents: [
+      {
+        parts: [
+          { text: combinedInput }
+        ]
       }
-    }
+    ]
   };
 
-  const targetUrl = `https://generativelanguage.googleapis.com/v1/models/gemini-3.8-flash:generateContent?key=${API_KEY}`;
+  const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
 
   const response = await fetch(targetUrl, {
     method: 'POST',
