@@ -68,10 +68,10 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
 
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
-
+[];
+t
 // ===== 2. MEMORY =====
-let MEMORY = [];
-try {
+let MEMORY = ry {
   const storedMemory = JSON.parse(localStorage.getItem('jarvis_memory') || '[]');
   if (Array.isArray(storedMemory)) {
     MEMORY = storedMemory.filter(m => m && (m.role === 'user' || m.role === 'model') && typeof m.text === 'string' && !(m.role === 'model' && /^(?:Your strong password:|ఇదిగో strong password:)/i.test(m.text)));
@@ -495,76 +495,274 @@ async function handleTools(text) {
   if (t.includes('dollar') || t.includes('usd') || t.includes('exchange')) {
     const amountMatch = t.match(/[-+]?\d+(?:\.\d+)?/);
     const amount = amountMatch ? Number(amountMatch[0]) : 1;
-    if (!Number.isFinite(amount) || amount <= 0) return 'Enter a dollar amount greater than zero.';
-    let rate;
-    try {
-      const data = await fetchToolJson('https://open.er-api.com/v6/latest/USD');
-      rate = Number(data?.rates?.INR);
-      if (!Number.isFinite(rate) || rate <= 0) rate = undefined;
-    } catch (e) {}
-    if (!Number.isFinite(rate)) {
-      try {
-        const backup = await fetchToolJson('https://api.frankfurter.dev/v1/latest?base=USD&symbols=INR');
-        rate = Number(backup?.rates?.INR);
-        if (!Number.isFinite(rate) || rate <= 0) rate = undefined;
-      } catch (e) {}
-    }
-    if (!Number.isFinite(rate) || rate <= 0) return 'Currency service error, Boss.';
-    return amount + ' US dollars is about ' + Math.round(amount * rate) + ' Indian rupees, Boss.';
+// ===== 2. MEMORY =====
+let MEMORY = [];
+try {
+  const storedMemory = JSON.parse(localStorage.getItem('jarvis_memory') || '[]');
+  if (Array.isArray(storedMemory)) {
+    MEMORY = storedMemory.filter(m => m && (m.role === 'user' || m.role === 'model') && typeof m.text === 'string' && !(m.role === 'model' && /^(?:Your strong password:|ఇదిగో strong password:)/i.test(m.text)));
+    if (MEMORY.length !== storedMemory.length) localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+  } else {
+    localStorage.removeItem('jarvis_memory');
   }
-
-  if (t.includes('meaning')) {
-    const match = text.match(/\bmeaning(?:\s+of)?\s+(.+)$/i);
-    const word = match?.[1]?.trim().replace(/[?.!]+$/, '');
-    if (!word) return 'Meaning format: say “meaning of <word>”.';
-    try {
-      const data = await fetchToolJson('https://api.dictionaryapi.dev/api/v2/entries/en/' + encodeURIComponent(word), {}, 7000);
-      const definition = data?.[0]?.meanings?.[0]?.definitions?.[0]?.definition;
-      if (typeof definition === 'string' && definition.trim()) return word + ' means: ' + definition;
-    } catch (e) {}
-    try {
-      const data = await fetchToolJson('https://api.datamuse.com/words?sp=' + encodeURIComponent(word) + '&md=d&max=1', {}, 7000);
-      const definition = data?.[0]?.defs?.[0]?.replace(/^[a-z]{1,5}\s+/i, '').trim();
-      if (definition) return word + ' means: ' + definition;
-} catch (e) {}
-    return 'Could not retrieve the word meaning right now. Try again later.';
-  }
-
-  if (t.includes('password')) {
-    const secureCrypto = globalThis.crypto;
-    if (!secureCrypto || typeof secureCrypto.getRandomValues !== 'function') return 'Secure password generation is unavailable in this browser.';
-    const groups = ['ABCDEFGHJKLMNPQRSTUVWXYZ', 'abcdefghijkmnpqrstuvwxyz', '23456789', '!@#$%'];
-    const all = groups.join('');
-    const secureIndex = max => {
-      const limit = 0x100000000 - (0x100000000 % max);
-      const values = new Uint32Array(1);
-      do { secureCrypto.getRandomValues(values); } while (values[0] >= limit);
-      return values[0] % max;
-    };
-    let password = groups.map(group => group[secureIndex(group.length)]).join('');
-    while (password.length < 16) password += all[secureIndex(all.length)];
-    password = password.split('');
-    for (let i = password.length - 1; i > 0; i--) {
-      const j = secureIndex(i + 1);
-      [password[i], password[j]] = [password[j], password[i]];
-    }
-    return 'Your strong password: ' + password.join('');
-  }
-
-  if (t.includes('bitcoin') || t.includes('crypto')) {
-    try {
-      const data = await fetchToolJson('https://api.coingecko.com/api/v3/simple/price?ids=bitcoin&vs_currencies=usd,inr');
-      const usdValue = data?.bitcoin?.usd, inrValue = data?.bitcoin?.inr;
-      const usd = Number(usdValue), inr = Number(inrValue);
-      if (usdValue === null || usdValue === undefined || inrValue === null || inrValue === undefined || !Number.isFinite(usd) || !Number.isFinite(inr) || usd <= 0 || inr <= 0) throw new Error('Crypto price unavailable.');
-      return 'Bitcoin is ' + usd + ' dollars, ' + inr + ' rupees, Boss.';
-    } catch (e) {
-      return 'Crypto service error, Boss.';
-    }
-  }
-
-  return null;
+} catch (e) {
+  localStorage.removeItem('jarvis_memory');
 }
+
+const chat = document.getElementById('chat');
+const conversationStage = document.getElementById('conversation-stage');
+const input = document.getElementById('msg');
+const micBtn = document.getElementById('mic-btn');
+const clearBtn = document.getElementById('clear-btn');
+const camBtn = document.getElementById('cam-btn');
+const imgInput = document.getElementById('img-input');
+const historyList = document.getElementById('history-list');
+const historyCount = document.getElementById('history-count');
+const menuButton = document.getElementById('menu-btn');
+const sidebarToggle = document.getElementById('sidebar-toggle');
+const sidebarBackdrop = document.getElementById('sidebar-backdrop');
+const settingsOpen = document.getElementById('settings-open');
+const settingsClose = document.getElementById('settings-close');
+const settingsPanel = document.getElementById('settings-panel');
+const settingsScrim = document.getElementById('settings-scrim');
+const themeSelect = document.getElementById('theme-select');
+const clearMemorySetting = document.getElementById('clear-memory-setting');
+const thinkingStatus = document.getElementById('thinking-status');
+const thinkingLabel = document.getElementById('thinking-label');
+
+const HISTORY_KEY = 'jarvis_conversation_history_v1';
+const ACTIVE_CONVERSATION_KEY = 'jarvis_active_conversation_v1';
+let CONVERSATIONS = [];
+
+try {
+  const stored = JSON.parse(localStorage.getItem(HISTORY_KEY) || '[]');
+  if (Array.isArray(stored)) {
+    CONVERSATIONS = stored.filter(c => c && typeof c.id === 'string' && Array.isArray(c.messages)).map(c => ({
+      ...c,
+      messages: c.messages.filter(m => m && (m.role === 'user' || m.role === 'model') && typeof m.text === 'string')
+    }));
+  }
+} catch (e) {
+  localStorage.removeItem(HISTORY_KEY);
+}
+
+function makeConversationId() {
+  return 'chat_' + Date.now().toString(36) + '_' + Math.random().toString(36).slice(2, 8);
+}
+
+function conversationTitle(messages) {
+  const first = (messages || []).find(m => m && m.role === 'user' && typeof m.text === 'string');
+  return first ? (first.text.replace(/\s+/g, ' ').trim().slice(0, 42) || 'New chat') : 'New chat';
+}
+
+let ACTIVE_CONVERSATION_ID = localStorage.getItem(ACTIVE_CONVERSATION_KEY) || '';
+let initialConversation = CONVERSATIONS.find(c => c.id === ACTIVE_CONVERSATION_ID);
+if (!initialConversation) {
+  initialConversation = {
+    id: makeConversationId(),
+    title: conversationTitle(MEMORY),
+    updatedAt: Date.now(),
+    messages: MEMORY.slice(-120)
+  };
+  CONVERSATIONS.unshift(initialConversation);
+  ACTIVE_CONVERSATION_ID = initialConversation.id;
+} else {
+  MEMORY = initialConversation.messages.length ? initialConversation.messages.slice(-120) : MEMORY.slice(-120);
+  initialConversation.messages = MEMORY.slice(-120);
+  initialConversation.title = conversationTitle(MEMORY) || initialConversation.title || 'New chat';
+}
+localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+localStorage.setItem(ACTIVE_CONVERSATION_KEY, ACTIVE_CONVERSATION_ID);
+
+function currentConversation() {
+  return CONVERSATIONS.find(c => c.id === ACTIVE_CONVERSATION_ID);
+}
+
+function saveMemory() {
+  localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+  const current = currentConversation();
+  if (current) {
+    current.messages = MEMORY.slice(-120);
+    current.updatedAt = Date.now();
+    current.title = conversationTitle(current.messages) || current.title || 'New chat';
+    CONVERSATIONS.sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+    CONVERSATIONS = CONVERSATIONS.slice(0, 30);
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(CONVERSATIONS));
+    localStorage.setItem(ACTIVE_CONVERSATION_KEY, ACTIVE_CONVERSATION_ID);
+    renderHistoryList();
+  }
+}
+
+function renderHistoryList() {
+  if (!historyList) return;
+  const visible = CONVERSATIONS.filter(c => c.messages && c.messages.length).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
+  if (historyCount) historyCount.textContent = visible.length ? String(visible.length) : '';
+  historyList.replaceChildren();
+  if (!visible.length) {
+    const empty = document.createElement('p');
+    empty.className = 'history-empty';
+    empty.textContent = 'Your conversations will appear here';
+    historyList.appendChild(empty);
+    return;
+  }
+
+  visible.forEach(item => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'history-item';
+    button.dataset.conversationId = item.id;
+    button.setAttribute('aria-current', String(item.id === ACTIVE_CONVERSATION_ID));
+
+    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    icon.setAttribute('viewBox', '0 0 24 24');
+    icon.setAttribute('aria-hidden', 'true');
+    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+    path.setAttribute('d', 'M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5zM5 5.5v15M9 7h6M9 10h7');
+    icon.appendChild(path);
+
+    const label = document.createElement('span');
+    label.className = 'history-item-label';
+    label.textContent = item.title || conversationTitle(item.messages);
+
+    button.append(icon, label);
+    button.addEventListener('click', () => switchConversation(item.id));
+    historyList.appendChild(button);
+  });
+}
+
+function setThinking(active, message) {
+  const on = Boolean(active);
+  if (on && thinkingLabel) thinkingLabel.textContent = message || 'J.A.R.V.I.S is thinking';
+  document.body.classList.toggle('is-thinking', on);
+  if (thinkingStatus) thinkingStatus.hidden = !on;
+}
+
+function scrollConversationToBottom() {
+  if (!chat) return;
+  const scroll = () => { chat.scrollTop = chat.scrollHeight; };
+  if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(scroll);
+  else setTimeout(scroll, 16);
+}
+
+function setReply(node, text) {
+  if (!node) return;
+  node.innerText = text;
+  scrollConversationToBottom();
+}
+
+function closeSidebarOnMobile() {
+  if (window.matchMedia('(max-width: 780px)').matches) {
+    document.body.classList.remove('sidebar-open');
+    if (sidebarBackdrop) sidebarBackdrop.hidden = true;
+  }
+}
+
+function switchConversation(id) {
+  if (id === ACTIVE_CONVERSATION_ID) {
+    closeSidebarOnMobile();
+    return;
+  }
+  const next = CONVERSATIONS.find(c => c.id === id);
+  if (!next) return;
+  const current = currentConversation();
+  if (current) {
+    current.messages = MEMORY.slice(-120);
+    current.updatedAt = Date.now();
+  }
+  ACTIVE_CONVERSATION_ID = id;
+  MEMORY = next.messages.slice(-120);
+  localStorage.setItem(ACTIVE_CONVERSATION_KEY, id);
+  localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+  chat.replaceChildren();
+  renderHistoryList();
+  scrollConversationToBottom();
+  closeSidebarOnMobile();
+}
+
+renderHistoryList();
+applyTheme = (theme) => {
+  const chosen = theme === 'light' ? 'light' : 'dark';
+  document.documentElement.dataset.theme = chosen;
+  localStorage.setItem('jarvis_theme', chosen);
+  if (themeSelect) themeSelect.value = chosen;
+};
+applyTheme(localStorage.getItem('jarvis_theme') || 'dark');
+
+// ===== 3. API & GEMINI CLIENT SETUP =====
+let API_KEY = localStorage.getItem('jarvis_key');
+if (!API_KEY) {
+  API_KEY = prompt('Enter your Gemini API Key:');
+  if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
+}
+
+const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
+
+async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
+  if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
+
+  const { GoogleGenAI } = await import('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
+  // Add to memory
+  MEMORY.push({ role: 'user', text: inputMessage });
+  saveMemory();
+
+  const contents = [
+    { role: 'user', parts: [{ text: systemInstruction }] },
+    { role: 'model', parts: [{ text: "Understood, I am J.A.R.V.I.S." }] },
+    ...MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
+  ];
+
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: contents,
+  });
+
+  const reply = response?.text;
+  if (!reply) throw new Error('Gemini returned an empty response.');
+
+  const trimmedReply = reply.trim();
+  MEMORY.push({ role: 'model', text: trimmedReply });
+  saveMemory();
+
+  return trimmedReply;
+}
+
+window.requestGeminiInteraction = requestGeminiInteraction;
+
+// ===== 3.25 UI SEND BUTTON EVENT LISTENER =====
+document.addEventListener('DOMContentLoaded', () => {
+  const sendButton = document.querySelector('button[type="submit"]') || document.querySelector('#send-btn') || document.querySelector('.send-button') || document.querySelector('button svg')?.closest('button') || document.querySelector('footer button');
+  const inputField = document.getElementById('msg') || document.querySelector('input[type="text"]') || document.querySelector('textarea');
+
+  if (sendButton && inputField) {
+    const handleSend = async () => {
+      const text = inputField.value.trim();
+      if (!text) return;
+      inputField.value = '';
+      
+      try {
+        setThinking(true);
+        const reply = await requestGeminiInteraction(text);
+        setThinking(false);
+        alert('Jarvis: ' + reply); // రిప్లై చూపించడానికి
+      } catch (err) {
+        setThinking(false);
+        console.error('Error:', err.message);
+        alert('Error: ' + err.message);
+      }
+    };
+
+    sendButton.addEventListener('click', handleSend);
+    inputField.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        handleSend();
+      }
+    });
+  }
+});
 
 // ===== 3.5. AGENT MODE =====
 const AGENT_TOOLS = Object.freeze({
