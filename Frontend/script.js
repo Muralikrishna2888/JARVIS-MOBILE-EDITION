@@ -62,9 +62,11 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
     store: false
   };
 
+  // CORS ఎర్రర్ రాకుండా corsproxy.io తో ఇంటరాక్షన్స్ ఎండ్‌పాయింట్ వాడుతున్నాం
   const targetUrl = 'https://generativelanguage.googleapis.com/v1beta/interactions';
+  const proxyUrl = 'https://corsproxy.io/?' + encodeURIComponent(targetUrl);
 
-  const response = await fetch(targetUrl, {
+  const response = await fetch(proxyUrl, {
     method: 'POST',
     headers: {
       'Content-Type': 'application/json',
@@ -83,6 +85,7 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
   if (!reply) throw new Error(data?.status === 'failed' ? 'Gemini could not complete this request.' : 'Gemini returned an empty response.');
   return reply;
 }
+
 
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
