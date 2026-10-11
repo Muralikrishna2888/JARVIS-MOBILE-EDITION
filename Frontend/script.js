@@ -8,41 +8,27 @@ if (!API_KEY) {
 const GEMINI_MODEL = 'gemini-1.5-flash';
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
+// గూగుల్ అఫీషియల్ SDK ని వాడి 403, CORS మరియు పేలోడ్ ఎర్రర్‌లను పూర్తిగా తొలగించే ఫంక్షన్
 async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
-  
+
+  const { GoogleGenAI } = await import('@google/genai');
+  const ai = new GoogleGenAI({ apiKey: API_KEY });
+
   const combinedInput = systemInstruction ? `${systemInstruction}\n\nUser: ${input}` : input;
-  
-  // సరియైన అరే (Array) స్ట్రక్చర్ పేలోడ్
-  const payload = {
-    contents: [
-      {
-        parts: [
-          { text: combinedInput }
-        ]
-      }
-    ]
-  };
 
-  const targetUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${API_KEY}`;
-
-  const response = await fetch(targetUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify(payload)
+  const response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: combinedInput,
   });
 
-  const data = await response.json().catch(() => ({}));
-  if (!response.ok || data?.error) {
-    throw new Error(data?.error?.message || 'Gemini request failed (' + response.status + ').');
-  }
-
-  const reply = data?.candidates?.[0]?.content?.parts?.[0]?.text;
+  const reply = response?.text;
   if (!reply) throw new Error('Gemini returned an empty response.');
   return reply.trim();
 }
+
+// మాడ్యూల్ స్కోప్ సమస్య రాకుండా బటన్స్ కోసం విండోకి బైండ్ చేస్తున్నాం
+window.requestGeminiInteraction = requestGeminiInteraction;
 
 const GEMINI_MODEL = 'gemini-3.8-flash';
 
