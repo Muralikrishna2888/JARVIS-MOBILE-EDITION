@@ -51,7 +51,7 @@ async function requestGeminiInteraction(input, systemInstruction = GEMINI_SYSTEM
   return reply.trim();
 }
 
-const GEMINI_MODEL = 'gemini-1.5-flash';
+const GEMINI_MODEL = 'gemini-3.8-flash';
 const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
 
