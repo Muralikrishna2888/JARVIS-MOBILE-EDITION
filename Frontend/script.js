@@ -273,12 +273,14 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
 
 window.requestGeminiInteraction = requestGeminiInteraction;
 
-// ===== 4. UI EVENT LISTENERS =====
-document.addEventListener('DOMContentLoaded', () => {
+// ===== 4. DIRECT UI EVENT BINDING =====
+function attachJarvisEvents() {
   const sendButton = document.querySelector('button[type="submit"]') || document.querySelector('#send-btn') || document.querySelector('.send-button') || document.querySelector('button svg')?.closest('button') || document.querySelector('footer button');
   const inputField = document.getElementById('msg') || document.querySelector('input[type="text"]') || document.querySelector('textarea');
 
-  if (sendButton && inputField) {
+  if (sendButton && inputField && !sendButton.dataset.bound) {
+    sendButton.dataset.bound = "true"; // డ్యూప్లికేట్ కాకుండా ఉండటానికి
+    
     const handleSend = async () => {
       const text = inputField.value.trim();
       if (!text) return;
@@ -301,6 +303,19 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') {
         e.preventDefault();
         handleSend();
+      }
+    });
+    console.log("Jarvis Send Button Successfully Connected!");
+  }
+}
+
+// పేజీ లోడ్ అయిన వెంటనే మరియు ఒక సెకను తర్వాత కూడా ట్రిగ్గర్ అయ్యేలా
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', attachJarvisEvents);
+} else {
+  attachJarvisEvents();
+}
+      setTimeout(attachJarvisEvents, 1000);
       }
     });
   }
