@@ -14,7 +14,6 @@ try {
 
 const chat = document.getElementById('chat');
 const conversationStage = document.getElementById('conversation-stage');
-const input = document.getElementById('msg');
 const historyList = document.getElementById('history-list');
 const historyCount = document.getElementById('history-count');
 const thinkingStatus = document.getElementById('thinking-status');
@@ -164,7 +163,7 @@ function switchConversation(id) {
 
 renderHistoryList();
 
-// ===== 2. TOOLS INTEGRATION (ADVANCED CAPABILITIES) =====
+// ===== 2. ADVANCED TOOLS & APP LAUNCHER INTEGRATION =====
 async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
@@ -180,19 +179,51 @@ async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
 async function handleTools(text) {
   const t = text.toLowerCase();
 
-  if (/^\s*(?:please\s+)?(?:open\s+youtube|youtube\s+open|youtube)(?:\s+please)?[.!?]*\s*$/i.test(text)) {
-    window.open('https://youtube.com', '_blank', 'noopener,noreferrer');
-    return 'Opening YouTube, Boss.';
+  // 1. WhatsApp Open / Message
+  if (t.includes('whatsapp') || t.includes('వాట్సాప్')) {
+    window.location.href = 'whatsapp://';
+    setTimeout(() => { window.open('https://wa.me/', '_blank'); }, 1000);
+    return 'Opening WhatsApp, Boss.';
   }
-  if (/^\s*(?:please\s+)?(?:open\s+google|google\s+open|google)(?:\s+please)?[.!?]*\s*$/i.test(text)) {
+
+  // 2. YouTube Search & Play Music / Videos
+  if (t.includes('play') || t.includes('youtube') || t.includes('పాట') లేదా t.includes('ట్యూబ్')) {
+    const query = text.replace(/play|youtube|jarvis|పాట|పెట్టు|చూపించు/gi, '').trim();
+    const searchUrl = query ? 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query) : 'https://youtube.com';
+    window.open(searchUrl, '_blank', 'noopener,noreferrer');
+    return query ? 'Playing "' + query + '" on YouTube, Boss.' : 'Opening YouTube, Boss.';
+  }
+
+  // 3. Google Search / Browsing anything
+  if (t.includes('search') || t.includes('google') || t.includes('వెకు') || t.includes('తెలుసుకో')) {
+    const query = text.replace(/search|google|jarvis|వెతుకు|తెలుసుకో/gi, '').trim();
+    if (query) {
+      window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank', 'noopener,noreferrer');
+      return 'Searching Google for "' + query + '", Boss.';
+    }
     window.open('https://google.com', '_blank', 'noopener,noreferrer');
     return 'Opening Google, Boss.';
   }
 
+  // 4. Open Camera / Gallery (Web File Picker)
+  if (t.includes('camera') || t.includes('photo') || t.includes('కెమెరా') || t.includes('ఫోటో')) {
+    const imgInput = document.getElementById('img-input');
+    if (imgInput) imgInput.click();
+    return 'Opening camera / gallery tool, Boss.';
+  }
+
+  // 5. Phone Call (Dialer)
+  if (t.includes('call') || t.includes('కాల్')) {
+    window.location.href = 'tel:';
+    return 'Opening phone dialer, Boss.';
+  }
+
+  // 6. Time & Date
   if (/\b(?:what time(?: is it)?|what is the time|current time|tell me the time|time now)\b/.test(t) || /^\s*time(?:\s+please)?[.!?]*\s*$/.test(t) || t.includes('టైమ్') || t.includes('సమయం')) {
     return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
   }
 
+  // 7. Weather
   if (t.includes('weather') || t.includes('వాతావరణం')) {
     if (!navigator.geolocation) return 'I need location permission for weather, Boss.';
     return await new Promise(resolve => {
@@ -210,7 +241,8 @@ async function handleTools(text) {
     });
   }
 
-  if (/\bjoke\b/.test(t)) {
+  // 8. Jokes
+  if (/\bjoke\b/.test(t) || t.includes('జోక్')) {
     try {
       const data = await fetchToolJson('https://official-joke-api.appspot.com/random_joke');
       return data.setup + ' ... ' + data.punchline;
@@ -222,6 +254,7 @@ async function handleTools(text) {
   return null;
 }
 
+
 // ===== 3. API & GEMINI CLIENT SETUP =====
 let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
@@ -230,12 +263,11 @@ if (!API_KEY) {
 }
 
 const GEMINI_MODEL = 'gemini-1.5-flash';
-const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, an advanced AGI personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language.';
+const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
 async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
 
-  // First check if any tool handles it locally
   const toolResult = await handleTools(inputMessage);
   if (toolResult) {
     MEMORY.push({ role: 'user', text: inputMessage });
@@ -252,7 +284,7 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
 
   const contents = [
     { role: 'user', parts: [{ text: systemInstruction }] },
-    { role: 'model', parts: [{ text: "Understood, I am J.A.R.V.I.S AGI system." }] },
+    { role: 'model', parts: [{ text: "Understood, I am J.A.R.V.I.S." }] },
     ...MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
   ];
 
@@ -273,22 +305,50 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
 
 window.requestGeminiInteraction = requestGeminiInteraction;
 
-// ===== 4. UI SEND BUTTON EVENT LISTENER (FIXED FOR index.html IDs) =====
+// ===== 4. UI SEND BUTTON & CHAT DISPLAY =====
 document.addEventListener('DOMContentLoaded', () => {
   const sendButton = document.getElementById('send') || document.querySelector('.send-button');
   const inputField = document.getElementById('msg');
+  const chatContainer = document.getElementById('chat');
+
+  // Render previous memory to chat UI on load
+  if (chatContainer && MEMORY.length > 0) {
+    chatContainer.replaceChildren();
+    MEMORY.forEach(m => {
+      const msgDiv = document.createElement('div');
+      msgDiv.className = m.role === 'user' ? 'message user-message' : 'message ai-message';
+      msgDiv.textContent = (m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text;
+      chatContainer.appendChild(msgDiv);
+    });
+    scrollConversationToBottom();
+  }
 
   if (sendButton && inputField) {
     const handleSend = async () => {
       const text = inputField.value.trim();
       if (!text) return;
       inputField.value = '';
+
+      if (chatContainer) {
+        const userDiv = document.createElement('div');
+        userDiv.className = 'message user-message';
+        userDiv.textContent = 'YOU: ' + text;
+        chatContainer.appendChild(userDiv);
+        scrollConversationToBottom();
+      }
       
       try {
         setThinking(true, 'J.A.R.V.I.S is thinking...');
         const reply = await requestGeminiInteraction(text);
         setThinking(false);
-        alert('Jarvis: ' + reply); // రిప్లై చూపించడానికి
+
+        if (chatContainer) {
+          const aiDiv = document.createElement('div');
+          aiDiv.className = 'message ai-message';
+          aiDiv.textContent = 'J.A.R.V.I.S: ' + reply;
+          chatContainer.appendChild(aiDiv);
+          scrollConversationToBottom();
+        }
       } catch (err) {
         setThinking(false);
         console.error('Error:', err.message);
@@ -301,19 +361,6 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') {
         e.preventDefault();
         handleSend();
-      }
-    });
-    console.log("Jarvis Send Button and Input Connected Successfully!");
-  }
-});
-
-// పేజీ లోడ్ అయిన వెంటనే మరియు ఒక సెకను తర్వాత కూడా ట్రిగ్గర్ అయ్యేలా
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', attachJarvisEvents);
-} else {
-  attachJarvisEvents();
-}
-      setTimeout(attachJarvisEvents, 1000);
       }
     });
   }
