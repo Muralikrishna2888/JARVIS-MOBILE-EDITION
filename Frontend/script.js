@@ -273,24 +273,22 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
 
 window.requestGeminiInteraction = requestGeminiInteraction;
 
-// ===== 4. DIRECT UI EVENT BINDING =====
-function attachJarvisEvents() {
-  const sendButton = document.querySelector('button[type="submit"]') || document.querySelector('#send-btn') || document.querySelector('.send-button') || document.querySelector('button svg')?.closest('button') || document.querySelector('footer button');
-  const inputField = document.getElementById('msg') || document.querySelector('input[type="text"]') || document.querySelector('textarea');
+// ===== 4. UI SEND BUTTON EVENT LISTENER (FIXED FOR index.html IDs) =====
+document.addEventListener('DOMContentLoaded', () => {
+  const sendButton = document.getElementById('send') || document.querySelector('.send-button');
+  const inputField = document.getElementById('msg');
 
-  if (sendButton && inputField && !sendButton.dataset.bound) {
-    sendButton.dataset.bound = "true"; // డ్యూప్లికేట్ కాకుండా ఉండటానికి
-    
+  if (sendButton && inputField) {
     const handleSend = async () => {
       const text = inputField.value.trim();
       if (!text) return;
       inputField.value = '';
       
       try {
-        setThinking(true, 'J.A.R.V.I.S is analyzing...');
+        setThinking(true, 'J.A.R.V.I.S is thinking...');
         const reply = await requestGeminiInteraction(text);
         setThinking(false);
-        alert('Jarvis: ' + reply);
+        alert('Jarvis: ' + reply); // రిప్లై చూపించడానికి
       } catch (err) {
         setThinking(false);
         console.error('Error:', err.message);
@@ -305,9 +303,9 @@ function attachJarvisEvents() {
         handleSend();
       }
     });
-    console.log("Jarvis Send Button Successfully Connected!");
+    console.log("Jarvis Send Button and Input Connected Successfully!");
   }
-}
+});
 
 // పేజీ లోడ్ అయిన వెంటనే మరియు ఒక సెకను తర్వాత కూడా ట్రిగ్గర్ అయ్యేలా
 if (document.readyState === 'loading') {
