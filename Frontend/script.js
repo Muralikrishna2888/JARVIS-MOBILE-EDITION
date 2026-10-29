@@ -386,48 +386,60 @@ function bindJarvisControls() {
   }
 }
 
-// ===== 5. EXACT REFERENCE 3D PARTICLE CORE (FIBONACCI SPHERE) =====
+// ===== 5. INTERACTIVE VOICE CORE (TOUCH TO SPEAK) =====
+let isCoreListening = false;
+
 function initSphereAnimation() {
   const canvas = document.getElementById('particle-sphere');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
-  
-  // మొబైల్ స్క్రీన్ పై చుక్కలు షార్ప్ గా కనిపించడానికి High-DPI సెటప్
   const size = 280;
   const dpr = window.devicePixelRatio || 1;
   canvas.width = size * dpr;
   canvas.height = size * dpr;
   canvas.style.width = size + 'px';
   canvas.style.height = size + 'px';
+  canvas.style.cursor = 'pointer';
   ctx.scale(dpr, dpr);
 
-  const numParticles = 520; // చుక్కల సంఖ్య (అంచుల చుట్టూ ఒత్తుగా రావడానికి)
+  const numParticles = 520;
   const particles = [];
-  const radius = 108;
+  const baseRadius = 108;
   const goldenRatio = (1 + Math.sqrt(5)) / 2;
 
-  // Fibonacci Sphere Algorithm - చుక్కలను గోళం ఉపరితలంపై సమానంగా అమరుస్తుంది
   for (let i = 0; i < numParticles; i++) {
     const theta = 2 * Math.PI * i / goldenRatio;
     const phi = Math.acos(1 - 2 * (i + 0.5) / numParticles);
 
     particles.push({
-      x: radius * Math.sin(phi) * Math.cos(theta),
-      y: radius * Math.sin(phi) * Math.sin(theta),
-      z: radius * Math.cos(phi)
+      nx: Math.sin(phi) * Math.cos(theta),
+      ny: Math.sin(phi) * Math.sin(theta),
+      nz: Math.cos(phi)
     });
   }
 
   let angleY = 0;
-  let angleX = 0.25; // కొద్దిగా 3D టిల్ట్
+  let angleX = 0.25;
+  let pulsePhase = 0;
 
   function render() {
     ctx.clearRect(0, 0, size, size);
     const cx = size / 2;
     const cy = size / 2;
-    
-    angleY += 0.005; // స్మూత్ రొటేషన్ స్పీడ్
+
+    // మైక్ ఆన్ లో ఉన్నప్పుడు కోర్ వేగంగా తిరుగుతూ పల్స్ అవుతుంది
+    if (isCoreListening) {
+      angleY += 0.022;
+      pulsePhase += 0.12;
+    } else {
+      angleY += 0.005;
+      pulsePhase = 0;
+    }
+
+    const currentRadius = isCoreListening 
+      ? baseRadius + Math.sin(pulsePhase) * 6 
+      : baseRadius;
 
     const cosY = Math.cos(angleY);
     const sinY = Math.sin(angleY);
@@ -435,36 +447,106 @@ function initSphereAnimation() {
     const sinX = Math.sin(angleX);
 
     particles.forEach(p => {
-      // Y-అక్షం చుట్టూ రొటేషన్
-      let x1 = p.x * cosY - p.z * sinY;
-      let z1 = p.z * cosY + p.x * sinY;
+      const px = p.nx * currentRadius;
+      const py = p.ny * currentRadius;
+      const pz = p.nz * currentRadius;
 
-      // X-అక్షం చుట్టూ రొటేషన్
-      let y1 = p.y * cosX - z1 * sinX;
-      let z2 = z1 * cosX + p.y * sinX;
+      let x1 = px * cosY - pz * sinY;
+      let z1 = pz * cosY + px * sinY;
 
-      // 3D Perspective Projection
+      let y1 = py * cosX - z1 * sinX;
+      let z2 = z1 * cosX + py * sinX;
+
       const fov = 320;
       const scale = fov / (fov + z2);
       const projX = x1 * scale + cx;
       const projY = y1 * scale + cy;
 
-      // ముందున్న చుక్కలు ప్రకాశవంతంగా, వెనుక ఉన్నవి మసకగా కనిపించేలా Depth Alpha
-      const normalizedZ = (z2 + radius) / (2 * radius); 
+      const normalizedZ = (z2 + currentRadius) / (2 * currentRadius);
       const alpha = Math.max(0.12, Math.pow(normalizedZ, 1.6));
-
-      // అంచుల వద్ద చుక్కల పరిమాణం కరెక్ట్ గా ఉండేలా
-      const dotSize = Math.max(0.8, 1.55 * scale);
+      const dotSize = Math.max(0.8, (isCoreListening ? 1.8 : 1.55) * scale);
 
       ctx.beginPath();
       ctx.arc(projX, projY, dotSize, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(235, 242, 255, ${alpha})`;
+      
+      // మైక్ ఆన్ అయితే Cyan Blue రంగు, లేకపోతే White రంగు
+      if (isCoreListening) {
+        ctx.fillStyle = `rgba(0, 240, 255, ${alpha})`;
+      } else {
+        ctx.fillStyle = `rgba(235, 242, 255, ${alpha})`;
+      }
       ctx.fill();
     });
 
     requestAnimationFrame(render);
   }
   render();
+
+  // ===== CORE TOUCH MIC LOGIC =====
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) {
+    canvas.addEventListener('click', () => alert("మీ బ్రౌజర్‌లో వాయిస్ రికగ్నిషన్ సపోర్ట్ లేదు సార్."));
+    return;
+  }
+
+  const coreMic = new SpeechRecognition();
+  coreMic.continuous = false; // ఒక కమాండ్ వినగానే ఆటోమేటిక్ గా ప్రాసెస్ చేస్తుంది
+  coreMic.interimResults = false;
+  coreMic.lang = 'en-IN'; // ఇంగ్లీష్ మరియు ఇండియన్ యాక్సెంట్ సపోర్ట్
+
+  const activateCoreMic = (e) => {
+    if (e) e.preventDefault();
+    
+    // జార్విస్ మాట్లాడుతుంటే ఆపేసి మీ మాట వింటుంది
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+
+    if (isCoreListening) {
+      coreMic.stop();
+      isCoreListening = false;
+      return;
+    }
+
+    try {
+      coreMic.start();
+      isCoreListening = true;
+      if ('vibrate' in navigator) navigator.vibrate(40); // చిన్న వైబ్రేషన్ ఫీడ్‌బ్యాక్
+      
+      const subPrompt = document.querySelector('.sub-prompt');
+      if (subPrompt) subPrompt.textContent = "Listening, Sir... Speak now";
+    } catch (err) {
+      console.error(err);
+    }
+  };
+
+  coreMic.onresult = (event) => {
+    const voiceText = event.results[0][0].transcript.trim();
+    isCoreListening = false;
+
+    const subPrompt = document.querySelector('.sub-prompt');
+    if (subPrompt) subPrompt.textContent = `"${voiceText}"`;
+
+    // మనం మాట్లాడిన టెక్స్ట్‌ని నేరుగా జార్విస్ కి పంపడం
+    const inputField = document.getElementById('msg');
+    const sendButton = document.getElementById('send');
+    if (inputField && sendButton) {
+      inputField.value = voiceText;
+      sendButton.click();
+    }
+  };
+
+  coreMic.onerror = () => {
+    isCoreListening = false;
+    const subPrompt = document.querySelector('.sub-prompt');
+    if (subPrompt) subPrompt.textContent = "Tap the core to speak, Sir";
+  };
+
+  coreMic.onend = () => {
+    isCoreListening = false;
+  };
+
+  // కోర్ పై టచ్ చేసినా లేదా క్లిక్ చేసినా మైక్ ఆన్ అవుతుంది
+  canvas.addEventListener('pointerdown', activateCoreMic);
 }
+
 
 
