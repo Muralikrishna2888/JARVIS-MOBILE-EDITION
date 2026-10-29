@@ -72,18 +72,15 @@ body.jarvis-dark {
   display: flex;
   align-items: center;
   justify-content: center;
+  flex-shrink: 0;
 }
 
 #particle-sphere {
-  width: 280px;
-  height: 280px;
+  width: 280px !important;
+  height: 280px !important;
+  display: block;
 }
 
-
-#particle-sphere {
-  width: 250px;
-  height: 250px;
-}
 
 .greeting-box {
   text-align: center;
