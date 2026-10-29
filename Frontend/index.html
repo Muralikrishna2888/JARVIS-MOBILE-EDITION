@@ -2,46 +2,50 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
   <title>Jarvis</title>
-  <link rel="stylesheet" href="style.css">
+  <link rel="stylesheet" href="style.css?v=2">
 </head>
 <body class="jarvis-dark">
-  <!-- Top Bar -->
+  <!-- Top Navigation Bar -->
   <header class="top-nav">
-    <button class="icon-btn" id="history-toggle">🕒</button>
-    <div class="jarvis-title">Jarvis ▾</div>
-    <button class="icon-btn" id="settings-btn">⚙️</button>
+    <button class="icon-btn" id="history-toggle" aria-label="History">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
+    </button>
+    <div class="jarvis-title">Jarvis <span class="arrow">▾</span></div>
+    <button class="icon-btn" id="settings-btn" aria-label="Settings">
+      <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+    </button>
   </header>
 
-  <!-- Main Visual Area -->
+  <!-- Center Stage -->
   <main class="core-stage">
-    <!-- Animated Sphere Canvas -->
-    <canvas id="particle-sphere"></canvas>
+    <div class="sphere-wrapper">
+      <canvas id="particle-sphere"></canvas>
+    </div>
 
     <div class="greeting-box">
       <h1 id="dynamic-greeting">Evening, Eshwar.</h1>
-      <p class="sub-prompt">Ask about today's news</p>
+      <p class="sub-prompt">Say "open Spotify" — Jarvis launches apps</p>
       <div class="action-tags">
         <span>Tell me what to build next</span>
-        <span>·</span>
+        <span class="dot">·</span>
         <span>Not now</span>
-        <span>·</span>
+        <span class="dot">·</span>
         <span>Don't ask again</span>
       </div>
     </div>
 
-    <!-- Hidden Chat Container for responses -->
     <div id="chat" class="chat-overlay"></div>
   </main>
 
-  <!-- Input & Bottom Controls -->
+  <!-- Bottom Floating Pill & Navigation -->
   <footer class="bottom-controls">
     <div class="type-pill-btn" id="type-trigger">
-      ⌨️ <span>Type</span>
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="4" width="20" height="16" rx="2"></rect><line x1="6" y1="8" x2="6" y2="8"></line><line x1="10" y1="8" x2="10" y2="8"></line><line x1="14" y1="8" x2="14" y2="8"></line><line x1="18" y1="8" x2="18" y2="8"></line><line x1="6" y1="12" x2="6" y2="12"></line><line x1="10" y1="12" x2="10" y2="12"></line><line x1="14" y1="12" x2="14" y2="12"></line><line x1="18" y1="12" x2="18" y2="12"></line><line x1="7" y1="16" x2="17" y2="16"></line></svg>
+      <span>Type</span>
     </div>
 
-    <!-- Input Drawer (Hidden by default, opens on Type click) -->
     <div class="input-drawer" id="input-drawer" style="display: none;">
       <input type="text" id="msg" placeholder="Ask Jarvis anything..." />
       <button id="send" class="send-button">➤</button>
@@ -49,24 +53,34 @@
 
     <nav class="bottom-tabs">
       <button class="tab-item active" id="wake-btn">
-        <span class="tab-icon">🔮</span>
+        <div class="tab-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2L2 7l10 5 10-5-10-5zM2 17l10 5 10-5M2 12l10 5 10-5"/></svg>
+        </div>
         <span class="tab-label">Jarvis</span>
       </button>
       <button class="tab-item">
-        <span class="tab-icon">📋</span>
+        <div class="tab-icon-box badge-container">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="8" y1="6" x2="21" y2="6"></line><line x1="8" y1="12" x2="21" y2="12"></line><line x1="8" y1="18" x2="21" y2="18"></line><circle cx="4" cy="6" r="1"></circle><circle cx="4" cy="12" r="1"></circle><circle cx="4" cy="18" r="1"></circle></svg>
+          <span class="badge">3</span>
+        </div>
         <span class="tab-label">Today</span>
       </button>
       <button class="tab-item">
-        <span class="tab-icon">🧠</span>
+        <div class="tab-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path></svg>
+        </div>
         <span class="tab-label">Memory</span>
       </button>
       <button class="tab-item">
-        <span class="tab-icon">📁</span>
+        <div class="tab-icon-box">
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        </div>
         <span class="tab-label">Files</span>
       </button>
     </nav>
   </footer>
 
-  <script type="module" src="script.js"></script>
+  <script type="module" src="script.js?v=2"></script>
 </body>
 </html>
+
