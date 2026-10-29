@@ -547,6 +547,7 @@ function initSphereAnimation() {
   // కోర్ పై టచ్ చేసినా లేదా క్లిక్ చేసినా మైక్ ఆన్ అవుతుంది
   canvas.addEventListener('pointerdown', activateCoreMic);
 }
-
+\'function updateName(newName) 
+{localStorage.setltem('userName',newName);}\'
 
 
