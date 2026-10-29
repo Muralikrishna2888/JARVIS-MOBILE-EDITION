@@ -235,7 +235,7 @@ if (!API_KEY) {
 }
 
 // Fixed model name to resolve 404 error
-const GEMINI_MODEL = 'gemini-1.5-flash-latest';
+const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const GEMINI_SYSTEM_INSTRUCTION = `You are J.A.R.V.I.S, an adaptive personal AGI companion built for Sir.
 Core Directives:
