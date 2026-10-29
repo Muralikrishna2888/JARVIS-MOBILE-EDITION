@@ -67,12 +67,18 @@ body.jarvis-dark {
 }
 
 .sphere-wrapper {
-  width: 250px;
-  height: 250px;
+  width: 280px;
+  height: 280px;
   display: flex;
   align-items: center;
   justify-content: center;
 }
+
+#particle-sphere {
+  width: 280px;
+  height: 280px;
+}
+
 
 #particle-sphere {
   width: 250px;
