@@ -80,51 +80,129 @@ function scrollConversationToBottom() {
   chat.scrollTop = chat.scrollHeight;
 }
 
-// ===== 2. TOOLS & NATIVE APP LAUNCHER =====
-async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
-  const controller = typeof AbortController === 'function' ? new AbortController() : null;
-  const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
+// ===== 2. ADVANCED DEVICE CONTROL & TOOLS ENGINE =====
+let torchStream = null;
+
+async function toggleTorch(turnOn) {
   try {
-    const response = await fetch(url, { ...options, ...(controller ? { signal: controller.signal } : {}) });
-    if (!response.ok) throw new Error('Request failed (' + response.status + ').');
-    return await response.json();
-  } finally {
-    if (timeoutId) clearTimeout(timeoutId);
+    if (turnOn) {
+      torchStream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment' }
+      });
+      const track = torchStream.getVideoTracks()[0];
+      await track.applyConstraints({ advanced: [{ torch: true }] });
+      return 'Flashlight turned ON, Sir.';
+    } else {
+      if (torchStream) {
+        torchStream.getTracks().forEach(track => track.stop());
+        torchStream = null;
+      }
+      return 'Flashlight turned OFF, Sir.';
+    }
+  } catch (e) {
+    return 'Flashlight control requires camera permission or HTTPS, Sir.';
   }
 }
 
 async function handleTools(text) {
-  const t = text.toLowerCase();
+  const t = text.toLowerCase().trim();
 
-  if (t.includes('whatsapp') || t.includes('వాట్సాప్')) {
-    window.location.href = 'whatsapp://';
-    setTimeout(() => { window.open('https://wa.me/', '_blank'); }, 1000);
-    return 'Opening WhatsApp for you, Sir.';
-  }
-
-  if (t.includes('play') || t.includes('youtube') || t.includes('పాట') || t.includes('ట్యూబ్')) {
-    const query = text.replace(/play|youtube|jarvis|పాట|పెట్టు|చూపించు/gi, '').trim();
-    const searchUrl = query ? 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query) : 'https://youtube.com';
-    window.open(searchUrl, '_blank', 'noopener,noreferrer');
-    return query ? 'Playing "' + query + '" on YouTube, Sir.' : 'Opening YouTube, Sir.';
-  }
-
-  if (t.includes('search') || t.includes('google') || t.includes('వెతుకు') || t.includes('తెలుసుకో')) {
-    const query = text.replace(/search|google|jarvis|వెతుకు|తెలుసుకో/gi, '').trim();
-    if (query) {
-      window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank', 'noopener,noreferrer');
-      return 'Searching Google for "' + query + '", Sir.';
+  // 1. BATTERY STATUS CHECK
+  if (t.includes('battery') || t.includes('charge') || t.includes('బ్యాటరీ') || t.includes('ఛార్జింగ్')) {
+    if ('getBattery' in navigator) {
+      const battery = await navigator.getBattery();
+      const level = Math.round(battery.level * 100);
+      const charging = battery.charging ? 'charging' : 'not charging';
+      return `Your device battery is at ${level}% and currently ${charging}, Sir.`;
     }
-    window.open('https://google.com', '_blank', 'noopener,noreferrer');
-    return 'Opening Google, Sir.';
+    return 'Battery API is not supported on this browser, Sir.';
   }
 
+  // 2. FLASHLIGHT / TORCH CONTROL
+  if (t.includes('flashlight') || t.includes('torch') || t.includes('టార్చ్') || t.includes('లైట్')) {
+    if (t.includes('off') || t.includes('ఆఫ్') || t.includes('బంద్')) {
+      return await toggleTorch(false);
+    }
+    return await toggleTorch(true);
+  }
+
+  // 3. VIBRATION TEST
+  if (t.includes('vibrate') || t.includes('వైబ్రేట్')) {
+    if ('vibrate' in navigator) {
+      navigator.vibrate([200, 100, 200]);
+      return 'Device vibrated, Sir.';
+    }
+    return 'Vibration not supported on this device, Sir.';
+  }
+
+  // 4. SYSTEM PANELS (Wi-Fi, Bluetooth, Settings, Alarm)
+  if (t.includes('wifi') || t.includes('wi-fi') || t.includes('వైఫై')) {
+    window.location.href = 'intent:#Intent;action=android.settings.WIFI_SETTINGS;end';
+    return 'Opening Wi-Fi settings, Sir.';
+  }
+
+  if (t.includes('bluetooth') || t.includes('బ్లూటూత్')) {
+    window.location.href = 'intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end';
+    return 'Opening Bluetooth settings, Sir.';
+  }
+
+  if (t.includes('alarm') || t.includes('అలారం')) {
+    window.location.href = 'intent:#Intent;action=android.intent.action.SHOW_ALARMS;end';
+    return 'Opening Alarms, Sir.';
+  }
+
+  // 5. UNIVERSAL NATIVE APP LAUNCHER
+  const openAppMatch = t.match(/(?:open|launch|start|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
+  if (openAppMatch) {
+    const rawAppName = openAppMatch[1].replace(/app|యాప్|ప్లీజ్|చేయి/gi, '').trim().toLowerCase();
+
+    const appIntents = {
+      'youtube': 'vnd.youtube:',
+      'spotify': 'spotify:',
+      'whatsapp': 'whatsapp://',
+      'instagram': 'instagram://app',
+      'telegram': 'tg://',
+      'chrome': 'googlechrome://',
+      'maps': 'geo:0,0',
+      'camera': 'intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end',
+      'gallery': 'intent:#Intent;action=android.intent.action.VIEW;type=image/*;end',
+      'calculator': 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALCULATOR;end',
+      'settings': 'intent:#Intent;action=android.settings.SETTINGS;end',
+      'clock': 'intent:#Intent;action=android.intent.action.SHOW_ALARMS;end',
+      'contacts': 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CONTACTS;end'
+    };
+
+    if (appIntents[rawAppName]) {
+      window.location.href = appIntents[rawAppName];
+      return `Launching ${rawAppName} app, Sir.`;
+    } else {
+      window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${rawAppName};end`;
+      return `Attempting to open ${rawAppName}, Sir.`;
+    }
+  }
+
+  // 6. YOUTUBE SEARCH & PLAY DIRECT IN APP
+  if (t.includes('play') || t.includes('పాట')) {
+    const query = text.replace(/play|on youtube|youtube|jarvis|పాట|పెట్టు/gi, '').trim();
+    if (query) {
+      window.location.href = `vnd.youtube://results?search_query=${encodeURIComponent(query)}`;
+      return `Searching "${query}" on YouTube app, Sir.`;
+    }
+  }
+
+  // 7. PHONE CALL & DIALER
   if (t.includes('call') || t.includes('కాల్')) {
+    const numMatch = t.match(/\d{10,}/);
+    if (numMatch) {
+      window.location.href = `tel:${numMatch[0]}`;
+      return `Calling ${numMatch[0]}, Sir.`;
+    }
     window.location.href = 'tel:';
     return 'Opening phone dialer, Sir.';
   }
 
-  if (/\b(?:what time(?: is it)?|what is the time|current time|tell me the time|time now)\b/.test(t) || /^\s*time(?:\s+please)?[.!?]*\s*$/.test(t) || t.includes('టైమ్') || t.includes('సమయం')) {
+  // 8. TIME & WEATHER
+  if (/\b(?:what time|current time|time now)\b/.test(t) || t.includes('టైమ్') || t.includes('సమయం')) {
     return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Sir.';
   }
 
@@ -133,29 +211,21 @@ async function handleTools(text) {
     return await new Promise(resolve => {
       navigator.geolocation.getCurrentPosition(async position => {
         try {
-          const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + position.coords.latitude + '&longitude=' + position.coords.longitude + '&current_weather=true';
+          const url = `https://api.open-meteo.com/v1/forecast?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&current_weather=true`;
           const data = await fetchToolJson(url);
           const temperature = Number(data?.current_weather?.temperature);
-          if (!Number.isFinite(temperature)) throw new Error('Weather unavailable.');
-          resolve('The temperature is ' + temperature + '°C, Sir.');
+          resolve(`The current temperature is ${temperature}°C, Sir.`);
         } catch (e) {
           resolve('Weather service unavailable, Sir.');
         }
-      }, () => resolve('Location permission denied, Sir.'), { timeout: 10000, maximumAge: 300000 });
+      }, () => resolve('Location permission denied, Sir.'), { timeout: 10000 });
     });
-  }
-
-  if (/\bjoke\b/.test(t) || t.includes('జోక్')) {
-    try {
-      const data = await fetchToolJson('https://official-joke-api.appspot.com/random_joke');
-      return data.setup + ' ... ' + data.punchline;
-    } catch (e) {
-      return 'Why do programmers prefer dark mode? Because light attracts bugs, Sir.';
-    }
   }
 
   return null;
 }
+
+
 
 // ===== 3. GEMINI SETUP & 404 FIXED MODEL =====
 let API_KEY = localStorage.getItem('jarvis_key');
