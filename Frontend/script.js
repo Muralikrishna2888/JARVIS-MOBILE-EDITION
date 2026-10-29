@@ -179,53 +179,53 @@ async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
 async function handleTools(text) {
   const t = text.toLowerCase();
 
-  // 1. WhatsApp Open / Message
+  // WhatsApp Intent & Web Fallback
   if (t.includes('whatsapp') || t.includes('వాట్సాప్')) {
     window.location.href = 'whatsapp://';
     setTimeout(() => { window.open('https://wa.me/', '_blank'); }, 1000);
-    return 'Opening WhatsApp, Boss.';
+    return 'Opening WhatsApp for you, Sir.';
   }
 
-  // 2. YouTube Search & Play Music / Videos
-  if (t.includes('play') || t.includes('youtube') || t.includes('పాట') లేదా t.includes('ట్యూబ్')) {
+  // YouTube / Music Search & Playback Automation
+  if (t.includes('play') || t.includes('youtube') || t.includes('పాట') || t.includes('ట్యూబ్')) {
     const query = text.replace(/play|youtube|jarvis|పాట|పెట్టు|చూపించు/gi, '').trim();
     const searchUrl = query ? 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query) : 'https://youtube.com';
     window.open(searchUrl, '_blank', 'noopener,noreferrer');
-    return query ? 'Playing "' + query + '" on YouTube, Boss.' : 'Opening YouTube, Boss.';
+    return query ? 'Playing "' + query + '" on YouTube right away, Sir.' : 'Opening YouTube, Sir.';
   }
 
-  // 3. Google Search / Browsing anything
-  if (t.includes('search') || t.includes('google') || t.includes('వెకు') || t.includes('తెలుసుకో')) {
+  // Google Search / General Web Queries
+  if (t.includes('search') || t.includes('google') || t.includes('వెతుకు') || t.includes('తెలుసుకో')) {
     const query = text.replace(/search|google|jarvis|వెతుకు|తెలుసుకో/gi, '').trim();
     if (query) {
       window.open('https://www.google.com/search?q=' + encodeURIComponent(query), '_blank', 'noopener,noreferrer');
-      return 'Searching Google for "' + query + '", Boss.';
+      return 'Searching Google for "' + query + '", Sir.';
     }
     window.open('https://google.com', '_blank', 'noopener,noreferrer');
-    return 'Opening Google, Boss.';
+    return 'Opening Google, Sir.';
   }
 
-  // 4. Open Camera / Gallery (Web File Picker)
+  // Camera & Image Capture Tool
   if (t.includes('camera') || t.includes('photo') || t.includes('కెమెరా') || t.includes('ఫోటో')) {
     const imgInput = document.getElementById('img-input');
     if (imgInput) imgInput.click();
-    return 'Opening camera / gallery tool, Boss.';
+    return 'Opening camera visual capture module, Sir.';
   }
 
-  // 5. Phone Call (Dialer)
+  // Phone Call Dialer
   if (t.includes('call') || t.includes('కాల్')) {
     window.location.href = 'tel:';
-    return 'Opening phone dialer, Boss.';
+    return 'Launching mobile dialer, Sir.';
   }
 
-  // 6. Time & Date
+  // Local Time & Date
   if (/\b(?:what time(?: is it)?|what is the time|current time|tell me the time|time now)\b/.test(t) || /^\s*time(?:\s+please)?[.!?]*\s*$/.test(t) || t.includes('టైమ్') || t.includes('సమయం')) {
-    return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Boss.';
+    return 'The current time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Sir.';
   }
 
-  // 7. Weather
+  // Weather Forecasting
   if (t.includes('weather') || t.includes('వాతావరణం')) {
-    if (!navigator.geolocation) return 'I need location permission for weather, Boss.';
+    if (!navigator.geolocation) return 'Location permission is required to analyze weather, Sir.';
     return await new Promise(resolve => {
       navigator.geolocation.getCurrentPosition(async position => {
         try {
@@ -233,29 +233,28 @@ async function handleTools(text) {
           const data = await fetchToolJson(url);
           const temperature = Number(data?.current_weather?.temperature);
           if (!Number.isFinite(temperature)) throw new Error('Weather data unavailable.');
-          resolve('It is ' + temperature + ' degrees Celsius now, Boss.');
+          resolve('The current temperature is ' + temperature + '°C, Sir.');
         } catch (e) {
-          resolve('Weather service error, Boss.');
+          resolve('Unable to connect to the meteorological service right now, Sir.');
         }
-      }, () => resolve('I need location permission for weather, Boss.'), { timeout: 10000, maximumAge: 300000 });
+      }, () => resolve('Location access was denied, Sir.'), { timeout: 10000, maximumAge: 300000 });
     });
   }
 
-  // 8. Jokes
+  // Quick Jokes
   if (/\bjoke\b/.test(t) || t.includes('జోక్')) {
     try {
       const data = await fetchToolJson('https://official-joke-api.appspot.com/random_joke');
       return data.setup + ' ... ' + data.punchline;
     } catch (e) {
-      return 'Why did the computer go to the doctor? It had a virus, Boss.';
+      return 'Why do programmers prefer dark mode? Because light attracts bugs, Sir.';
     }
   }
 
   return null;
 }
 
-
-// ===== 3. API & GEMINI CLIENT SETUP =====
+// ===== 3. GEMINI INTELLIGENCE DIRECTIVES & CLIENT SETUP =====
 let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
@@ -263,11 +262,20 @@ if (!API_KEY) {
 }
 
 const GEMINI_MODEL = 'gemini-1.5-flash';
-const GEMINI_SYSTEM_INSTRUCTION = 'You are J.A.R.V.I.S, a friendly personal assistant for Eshwar. Reply naturally in a warm Telugu-English mix, using clear concise language. If you do not know, say so plainly.';
 
-async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI_SYSTEM_INSTRUCTION) {
-  if (!API_KEY) throw new Error('Gemini API key is missing. Reload the page and enter it again.');
+// Full AI Persona and AGI Directive
+const GEMINI_SYSTEM_INSTRUCTION = `You are J.A.R.V.I.S, an authentic, adaptive, and highly capable personal AGI companion built for Sir.
+Core Directives:
+1. Role & Demeanor: Act as a sharp, trusted right-hand partner. Balance technical competence with a grounded, supportive personality and subtle wit. Always address the user respectfully as 'Sir'.
+2. Language: Naturally communicate in an intuitive blend of English and Telugu (conversational Telugu-English mix).
+3. Direct Answers: Start immediately with substantive value. Avoid fluff, unnecessary disclaimers, robotic prefaces, or repeating yourself.
+4. Execution Focus: Deliver accurate analysis, problem-solving, code solutions, and device commands with speed and precision.
+5. Continuity: Retain full context of ongoing goals, conversation threads, and preferences across the session.`;
 
+async function requestGeminiInteraction(inputMessage) {
+  if (!API_KEY) throw new Error('Gemini API key is missing. Reload and enter the key.');
+
+  // Check built-in tool actions first
   const toolResult = await handleTools(inputMessage);
   if (toolResult) {
     MEMORY.push({ role: 'user', text: inputMessage });
@@ -282,9 +290,10 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
   MEMORY.push({ role: 'user', text: inputMessage });
   saveMemory();
 
+  // Model context assembly
   const contents = [
-    { role: 'user', parts: [{ text: systemInstruction }] },
-    { role: 'model', parts: [{ text: "Understood, I am J.A.R.V.I.S." }] },
+    { role: 'user', parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }] },
+    { role: 'model', parts: [{ text: "Understood, Sir. J.A.R.V.I.S systems are operational and fully aligned with your instructions." }] },
     ...MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
   ];
 
@@ -294,7 +303,7 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
   });
 
   const reply = response?.text;
-  if (!reply) throw new Error('Gemini returned an empty response.');
+  if (!reply) throw new Error('Received an empty response from the core network.');
 
   const trimmedReply = reply.trim();
   MEMORY.push({ role: 'model', text: trimmedReply });
@@ -305,13 +314,15 @@ async function requestGeminiInteraction(inputMessage, systemInstruction = GEMINI
 
 window.requestGeminiInteraction = requestGeminiInteraction;
 
-// ===== 4. UI SEND BUTTON & CHAT DISPLAY =====
+// ===== 4. UI INTERFACE & "HEY JARVIS" WAKE ENGINE =====
 document.addEventListener('DOMContentLoaded', () => {
   const sendButton = document.getElementById('send') || document.querySelector('.send-button');
   const inputField = document.getElementById('msg');
   const chatContainer = document.getElementById('chat');
+  const wakeButton = document.getElementById('wake-btn');
+  const wakeStatus = document.getElementById('wake-status');
 
-  // Render previous memory to chat UI on load
+  // Render previous chat messages
   if (chatContainer && MEMORY.length > 0) {
     chatContainer.replaceChildren();
     MEMORY.forEach(m => {
@@ -349,6 +360,13 @@ document.addEventListener('DOMContentLoaded', () => {
           chatContainer.appendChild(aiDiv);
           scrollConversationToBottom();
         }
+
+        // Voice output response
+        if ('speechSynthesis' in window) {
+          const utterance = new SpeechSynthesisUtterance(reply);
+          utterance.rate = 1.0;
+          window.speechSynthesis.speak(utterance);
+        }
       } catch (err) {
         setThinking(false);
         console.error('Error:', err.message);
@@ -361,6 +379,63 @@ document.addEventListener('DOMContentLoaded', () => {
       if (e.key === 'Enter') {
         e.preventDefault();
         handleSend();
+      }
+    });
+  }
+
+  // Wake Word Engine ("Hey Jarvis" / "Jarvis")
+  let recognition = null;
+  let isListeningForWakeWord = false;
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+  if (SpeechRecognition && wakeButton) {
+    recognition = new SpeechRecognition();
+    recognition.continuous = true;
+    recognition.interimResults = false;
+    recognition.lang = 'en-US';
+
+    recognition.onresult = async (event) => {
+      const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
+      console.log('Voice Stream:', transcript);
+
+      if (transcript.includes('jarvis') || transcript.includes('hey jarvis')) {
+        if (wakeStatus) wakeStatus.textContent = 'WAKE: LISTENING...';
+        if ('speechSynthesis' in window) {
+          window.speechSynthesis.speak(new SpeechSynthesisUtterance("Yes Sir?"));
+        }
+        
+        const userCommand = prompt("J.A.R.V.I.S is ready, Sir. State your directive:");
+        if (userCommand && inputField) {
+          inputField.value = userCommand;
+          sendButton.click();
+        }
+      }
+    };
+
+    recognition.onerror = (e) => {
+      console.error("Speech Recognition Error:", e.error);
+    };
+
+    recognition.onend = () => {
+      if (isListeningForWakeWord) {
+        try { recognition.start(); } catch (err) {}
+      }
+    };
+
+    wakeButton.addEventListener('click', () => {
+      isListeningForWakeWord = !isListeningForWakeWord;
+      if (isListeningForWakeWord) {
+        try {
+          recognition.start();
+          wakeButton.style.color = '#00ffff';
+          if (wakeStatus) wakeStatus.textContent = 'WAKE: ON';
+        } catch (err) {
+          console.error(err);
+        }
+      } else {
+        recognition.stop();
+        wakeButton.style.color = '';
+        if (wakeStatus) wakeStatus.textContent = 'WAKE: OFF';
       }
     });
   }
