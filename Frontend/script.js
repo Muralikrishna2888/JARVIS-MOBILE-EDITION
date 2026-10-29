@@ -314,15 +314,25 @@ async function requestGeminiInteraction(inputMessage) {
 
 window.requestGeminiInteraction = requestGeminiInteraction;
 
-// ===== 4. UI INTERFACE & "HEY JARVIS" WAKE ENGINE =====
-document.addEventListener('DOMContentLoaded', () => {
+// ===== 4. FAIL-SAFE UI BINDING & CHAT ENGINE =====
+function bindJarvisControls() {
   const sendButton = document.getElementById('send') || document.querySelector('.send-button');
   const inputField = document.getElementById('msg');
   const chatContainer = document.getElementById('chat');
   const wakeButton = document.getElementById('wake-btn');
   const wakeStatus = document.getElementById('wake-status');
 
-  // Render previous chat messages
+  if (!sendButton || !inputField) {
+    // ఎలిమెంట్స్ రెడీ అయ్యేవరకు మళ్లీ చెక్ చేస్తుంది
+    setTimeout(bindJarvisControls, 200);
+    return;
+  }
+
+  // డ్యూప్లికేట్ లిజనర్స్ రాకుండా చూస్తుంది
+  if (sendButton.dataset.jarvisBound === 'true') return;
+  sendButton.dataset.jarvisBound = 'true';
+
+  // పాత చాట్ మెమరీని లోడ్ చేయడం
   if (chatContainer && MEMORY.length > 0) {
     chatContainer.replaceChildren();
     MEMORY.forEach(m => {
@@ -334,110 +344,110 @@ document.addEventListener('DOMContentLoaded', () => {
     scrollConversationToBottom();
   }
 
-  if (sendButton && inputField) {
-    const handleSend = async () => {
-      const text = inputField.value.trim();
-      if (!text) return;
-      inputField.value = '';
+  const executeSend = async (e) => {
+    if (e) e.preventDefault();
+    const text = inputField.value.trim();
+    if (!text) return;
+    inputField.value = '';
+
+    if (chatContainer) {
+      const userDiv = document.createElement('div');
+      userDiv.className = 'message user-message';
+      userDiv.textContent = 'YOU: ' + text;
+      chatContainer.appendChild(userDiv);
+      scrollConversationToBottom();
+    }
+
+    try {
+      setThinking(true, 'J.A.R.V.I.S is thinking...');
+      const reply = await requestGeminiInteraction(text);
+      setThinking(false);
 
       if (chatContainer) {
-        const userDiv = document.createElement('div');
-        userDiv.className = 'message user-message';
-        userDiv.textContent = 'YOU: ' + text;
-        chatContainer.appendChild(userDiv);
+        const aiDiv = document.createElement('div');
+        aiDiv.className = 'message ai-message';
+        aiDiv.textContent = 'J.A.R.V.I.S: ' + reply;
+        chatContainer.appendChild(aiDiv);
         scrollConversationToBottom();
       }
-      
-      try {
-        setThinking(true, 'J.A.R.V.I.S is thinking...');
-        const reply = await requestGeminiInteraction(text);
-        setThinking(false);
 
-        if (chatContainer) {
-          const aiDiv = document.createElement('div');
-          aiDiv.className = 'message ai-message';
-          aiDiv.textContent = 'J.A.R.V.I.S: ' + reply;
-          chatContainer.appendChild(aiDiv);
-          scrollConversationToBottom();
-        }
-
-        // Voice output response
-        if ('speechSynthesis' in window) {
-          const utterance = new SpeechSynthesisUtterance(reply);
-          utterance.rate = 1.0;
-          window.speechSynthesis.speak(utterance);
-        }
-      } catch (err) {
-        setThinking(false);
-        console.error('Error:', err.message);
-        alert('Error: ' + err.message);
+      if ('speechSynthesis' in window) {
+        const utterance = new SpeechSynthesisUtterance(reply);
+        utterance.rate = 1.0;
+        window.speechSynthesis.speak(utterance);
       }
-    };
+    } catch (err) {
+      setThinking(false);
+      console.error('Error:', err.message);
+      alert('Error: ' + err.message);
+    }
+  };
 
-    sendButton.addEventListener('click', handleSend);
-    inputField.addEventListener('keypress', (e) => {
-      if (e.key === 'Enter') {
-        e.preventDefault();
-        handleSend();
-      }
-    });
-  }
+  // మొబైల్ టచ్ మరియు డెస్క్‌టాప్ క్లిక్ రెండింటికీ సపోర్ట్
+  sendButton.addEventListener('pointerdown', executeSend);
+  sendButton.addEventListener('click', executeSend);
+
+  inputField.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') {
+      e.preventDefault();
+      executeSend();
+    }
+  });
 
   // Wake Word Engine ("Hey Jarvis" / "Jarvis")
-  let recognition = null;
-  let isListeningForWakeWord = false;
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-
   if (SpeechRecognition && wakeButton) {
-    recognition = new SpeechRecognition();
+    let isListening = false;
+    const recognition = new SpeechRecognition();
     recognition.continuous = true;
     recognition.interimResults = false;
     recognition.lang = 'en-US';
 
     recognition.onresult = async (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-      console.log('Voice Stream:', transcript);
-
       if (transcript.includes('jarvis') || transcript.includes('hey jarvis')) {
         if (wakeStatus) wakeStatus.textContent = 'WAKE: LISTENING...';
         if ('speechSynthesis' in window) {
           window.speechSynthesis.speak(new SpeechSynthesisUtterance("Yes Sir?"));
         }
-        
         const userCommand = prompt("J.A.R.V.I.S is ready, Sir. State your directive:");
-        if (userCommand && inputField) {
+        if (userCommand) {
           inputField.value = userCommand;
-          sendButton.click();
+          executeSend();
         }
       }
     };
 
-    recognition.onerror = (e) => {
-      console.error("Speech Recognition Error:", e.error);
-    };
-
     recognition.onend = () => {
-      if (isListeningForWakeWord) {
+      if (isListening) {
         try { recognition.start(); } catch (err) {}
       }
     };
 
-    wakeButton.addEventListener('click', () => {
-      isListeningForWakeWord = !isListeningForWakeWord;
-      if (isListeningForWakeWord) {
+    const toggleWake = (e) => {
+      if (e) e.preventDefault();
+      isListening = !isListening;
+      if (isListening) {
         try {
           recognition.start();
           wakeButton.style.color = '#00ffff';
           if (wakeStatus) wakeStatus.textContent = 'WAKE: ON';
-        } catch (err) {
-          console.error(err);
-        }
+        } catch (err) {}
       } else {
         recognition.stop();
         wakeButton.style.color = '';
         if (wakeStatus) wakeStatus.textContent = 'WAKE: OFF';
       }
-    });
-  }
-});
+    };
 
+    wakeButton.addEventListener('pointerdown', toggleWake);
+    wakeButton.addEventListener('click', toggleWake);
+  }
+}
+
+// పేజీ లోడింగ్ స్టేటస్‌తో సంబంధం లేకుండా తక్షణమే రన్ అవుతుంది
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', bindJarvisControls);
+} else {
+  bindJarvisControls();
+}
