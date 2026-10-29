@@ -386,48 +386,79 @@ function bindJarvisControls() {
   }
 }
 
-// ===== 5. PARTICLE SPHERE ANIMATION =====
+// ===== 5. EXACT REFERENCE 3D PARTICLE CORE (FIBONACCI SPHERE) =====
 function initSphereAnimation() {
   const canvas = document.getElementById('particle-sphere');
   if (!canvas) return;
 
   const ctx = canvas.getContext('2d');
-  canvas.width = 260;
-  canvas.height = 260;
+  
+  // మొబైల్ స్క్రీన్ పై చుక్కలు షార్ప్ గా కనిపించడానికి High-DPI సెటప్
+  const size = 280;
+  const dpr = window.devicePixelRatio || 1;
+  canvas.width = size * dpr;
+  canvas.height = size * dpr;
+  canvas.style.width = size + 'px';
+  canvas.style.height = size + 'px';
+  ctx.scale(dpr, dpr);
 
-  const numParticles = 280;
+  const numParticles = 520; // చుక్కల సంఖ్య (అంచుల చుట్టూ ఒత్తుగా రావడానికి)
   const particles = [];
-  const radius = 95;
+  const radius = 108;
+  const goldenRatio = (1 + Math.sqrt(5)) / 2;
 
+  // Fibonacci Sphere Algorithm - చుక్కలను గోళం ఉపరితలంపై సమానంగా అమరుస్తుంది
   for (let i = 0; i < numParticles; i++) {
-    const theta = Math.acos(2 * Math.random() - 1);
-    const phi = 2 * Math.PI * Math.random();
+    const theta = 2 * Math.PI * i / goldenRatio;
+    const phi = Math.acos(1 - 2 * (i + 0.5) / numParticles);
+
     particles.push({
-      x: radius * Math.sin(theta) * Math.cos(phi),
-      y: radius * Math.sin(theta) * Math.sin(phi),
-      z: radius * Math.cos(theta)
+      x: radius * Math.sin(phi) * Math.cos(theta),
+      y: radius * Math.sin(phi) * Math.sin(theta),
+      z: radius * Math.cos(phi)
     });
   }
 
-  let angle = 0;
+  let angleY = 0;
+  let angleX = 0.25; // కొద్దిగా 3D టిల్ట్
+
   function render() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const cx = canvas.width / 2;
-    const cy = canvas.height / 2;
-    angle += 0.008;
+    ctx.clearRect(0, 0, size, size);
+    const cx = size / 2;
+    const cy = size / 2;
+    
+    angleY += 0.005; // స్మూత్ రొటేషన్ స్పీడ్
+
+    const cosY = Math.cos(angleY);
+    const sinY = Math.sin(angleY);
+    const cosX = Math.cos(angleX);
+    const sinX = Math.sin(angleX);
 
     particles.forEach(p => {
-      const rotX = p.x * Math.cos(angle) - p.z * Math.sin(angle);
-      const rotZ = p.x * Math.sin(angle) + p.z * Math.cos(angle);
+      // Y-అక్షం చుట్టూ రొటేషన్
+      let x1 = p.x * cosY - p.z * sinY;
+      let z1 = p.z * cosY + p.x * sinY;
 
-      const scale = 250 / (250 + rotZ);
-      const projX = rotX * scale + cx;
-      const projY = p.y * scale + cy;
-      const alpha = Math.max(0.1, (rotZ + radius) / (2 * radius));
+      // X-అక్షం చుట్టూ రొటేషన్
+      let y1 = p.y * cosX - z1 * sinX;
+      let z2 = z1 * cosX + p.y * sinX;
+
+      // 3D Perspective Projection
+      const fov = 320;
+      const scale = fov / (fov + z2);
+      const projX = x1 * scale + cx;
+      const projY = y1 * scale + cy;
+
+      // ముందున్న చుక్కలు ప్రకాశవంతంగా, వెనుక ఉన్నవి మసకగా కనిపించేలా Depth Alpha
+      const normalizedZ = (z2 + radius) / (2 * radius); 
+      const alpha = Math.max(0.12, Math.pow(normalizedZ, 1.6));
+
+      // అంచుల వద్ద చుక్కల పరిమాణం కరెక్ట్ గా ఉండేలా
+      const dotSize = Math.max(0.8, 1.55 * scale);
 
       ctx.beginPath();
-      ctx.arc(projX, projY, 1.2 * scale, 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.arc(projX, projY, dotSize, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(235, 242, 255, ${alpha})`;
       ctx.fill();
     });
 
@@ -436,13 +467,4 @@ function initSphereAnimation() {
   render();
 }
 
-if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', () => {
-    bindJarvisControls();
-    initSphereAnimation();
-  });
-} else {
-  bindJarvisControls();
-  initSphereAnimation();
-}
 
