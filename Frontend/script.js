@@ -13,12 +13,6 @@ try {
 }
 
 const chat = document.getElementById('chat');
-const conversationStage = document.getElementById('conversation-stage');
-const historyList = document.getElementById('history-list');
-const historyCount = document.getElementById('history-count');
-const thinkingStatus = document.getElementById('thinking-status');
-const thinkingLabel = document.getElementById('thinking-label');
-
 const HISTORY_KEY = 'jarvis_conversation_history_v1';
 const ACTIVE_CONVERSATION_KEY = 'jarvis_active_conversation_v1';
 let CONVERSATIONS = [];
@@ -78,92 +72,15 @@ function saveMemory() {
     CONVERSATIONS = CONVERSATIONS.slice(0, 30);
     localStorage.setItem(HISTORY_KEY, JSON.stringify(CONVERSATIONS));
     localStorage.setItem(ACTIVE_CONVERSATION_KEY, ACTIVE_CONVERSATION_ID);
-    renderHistoryList();
   }
-}
-
-function renderHistoryList() {
-  if (!historyList) return;
-  const visible = CONVERSATIONS.filter(c => c.messages && c.messages.length).sort((a, b) => (b.updatedAt || 0) - (a.updatedAt || 0));
-  if (historyCount) historyCount.textContent = visible.length ? String(visible.length) : '';
-  historyList.replaceChildren();
-  if (!visible.length) {
-    const empty = document.createElement('p');
-    empty.className = 'history-empty';
-    empty.textContent = 'Your conversations will appear here';
-    historyList.appendChild(empty);
-    return;
-  }
-
-  visible.forEach(item => {
-    const button = document.createElement('button');
-    button.type = 'button';
-    button.className = 'history-item';
-    button.dataset.conversationId = item.id;
-    button.setAttribute('aria-current', String(item.id === ACTIVE_CONVERSATION_ID));
-
-    const icon = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
-    icon.setAttribute('viewBox', '0 0 24 24');
-    icon.setAttribute('aria-hidden', 'true');
-    const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
-    path.setAttribute('d', 'M5 5.5A2.5 2.5 0 0 1 7.5 3H19v15H7.5A2.5 2.5 0 0 0 5 20.5zM5 5.5v15M9 7h6M9 10h7');
-    icon.appendChild(path);
-
-    const label = document.createElement('span');
-    label.className = 'history-item-label';
-    label.textContent = item.title || conversationTitle(item.messages);
-
-    button.append(icon, label);
-    button.addEventListener('click', () => switchConversation(item.id));
-    historyList.appendChild(button);
-  });
-}
-
-function setThinking(active, message) {
-  const on = Boolean(active);
-  if (on && thinkingLabel) thinkingLabel.textContent = message || 'J.A.R.V.I.S is thinking';
-  document.body.classList.toggle('is-thinking', on);
-  if (thinkingStatus) thinkingStatus.hidden = !on;
 }
 
 function scrollConversationToBottom() {
   if (!chat) return;
-  const scroll = () => { chat.scrollTop = chat.scrollHeight; };
-  if (typeof window.requestAnimationFrame === 'function') window.requestAnimationFrame(scroll);
-  else setTimeout(scroll, 16);
+  chat.scrollTop = chat.scrollHeight;
 }
 
-function closeSidebarOnMobile() {
-  if (window.matchMedia('(max-width: 780px)').matches) {
-    document.body.classList.remove('sidebar-open');
-  }
-}
-
-function switchConversation(id) {
-  if (id === ACTIVE_CONVERSATION_ID) {
-    closeSidebarOnMobile();
-    return;
-  }
-  const next = CONVERSATIONS.find(c => c.id === id);
-  if (!next) return;
-  const current = currentConversation();
-  if (current) {
-    current.messages = MEMORY.slice(-120);
-    current.updatedAt = Date.now();
-  }
-  ACTIVE_CONVERSATION_ID = id;
-  MEMORY = next.messages.slice(-120);
-  localStorage.setItem(ACTIVE_CONVERSATION_KEY, id);
-  localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
-  chat.replaceChildren();
-  renderHistoryList();
-  scrollConversationToBottom();
-  closeSidebarOnMobile();
-}
-
-renderHistoryList();
-
-// ===== 2. ADVANCED TOOLS & APP LAUNCHER INTEGRATION =====
+// ===== 2. TOOLS & NATIVE APP LAUNCHER =====
 async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
   const controller = typeof AbortController === 'function' ? new AbortController() : null;
   const timeoutId = controller ? setTimeout(() => controller.abort(), timeoutMs) : null;
@@ -179,22 +96,19 @@ async function fetchToolJson(url, options = {}, timeoutMs = 10000) {
 async function handleTools(text) {
   const t = text.toLowerCase();
 
-  // WhatsApp Intent & Web Fallback
   if (t.includes('whatsapp') || t.includes('వాట్సాప్')) {
     window.location.href = 'whatsapp://';
     setTimeout(() => { window.open('https://wa.me/', '_blank'); }, 1000);
     return 'Opening WhatsApp for you, Sir.';
   }
 
-  // YouTube / Music Search & Playback Automation
   if (t.includes('play') || t.includes('youtube') || t.includes('పాట') || t.includes('ట్యూబ్')) {
     const query = text.replace(/play|youtube|jarvis|పాట|పెట్టు|చూపించు/gi, '').trim();
     const searchUrl = query ? 'https://www.youtube.com/results?search_query=' + encodeURIComponent(query) : 'https://youtube.com';
     window.open(searchUrl, '_blank', 'noopener,noreferrer');
-    return query ? 'Playing "' + query + '" on YouTube right away, Sir.' : 'Opening YouTube, Sir.';
+    return query ? 'Playing "' + query + '" on YouTube, Sir.' : 'Opening YouTube, Sir.';
   }
 
-  // Google Search / General Web Queries
   if (t.includes('search') || t.includes('google') || t.includes('వెతుకు') || t.includes('తెలుసుకో')) {
     const query = text.replace(/search|google|jarvis|వెతుకు|తెలుసుకో/gi, '').trim();
     if (query) {
@@ -205,43 +119,32 @@ async function handleTools(text) {
     return 'Opening Google, Sir.';
   }
 
-  // Camera & Image Capture Tool
-  if (t.includes('camera') || t.includes('photo') || t.includes('కెమెరా') || t.includes('ఫోటో')) {
-    const imgInput = document.getElementById('img-input');
-    if (imgInput) imgInput.click();
-    return 'Opening camera visual capture module, Sir.';
-  }
-
-  // Phone Call Dialer
   if (t.includes('call') || t.includes('కాల్')) {
     window.location.href = 'tel:';
-    return 'Launching mobile dialer, Sir.';
+    return 'Opening phone dialer, Sir.';
   }
 
-  // Local Time & Date
   if (/\b(?:what time(?: is it)?|what is the time|current time|tell me the time|time now)\b/.test(t) || /^\s*time(?:\s+please)?[.!?]*\s*$/.test(t) || t.includes('టైమ్') || t.includes('సమయం')) {
-    return 'The current time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Sir.';
+    return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Sir.';
   }
 
-  // Weather Forecasting
   if (t.includes('weather') || t.includes('వాతావరణం')) {
-    if (!navigator.geolocation) return 'Location permission is required to analyze weather, Sir.';
+    if (!navigator.geolocation) return 'Location permission required for weather, Sir.';
     return await new Promise(resolve => {
       navigator.geolocation.getCurrentPosition(async position => {
         try {
           const url = 'https://api.open-meteo.com/v1/forecast?latitude=' + position.coords.latitude + '&longitude=' + position.coords.longitude + '&current_weather=true';
           const data = await fetchToolJson(url);
           const temperature = Number(data?.current_weather?.temperature);
-          if (!Number.isFinite(temperature)) throw new Error('Weather data unavailable.');
-          resolve('The current temperature is ' + temperature + '°C, Sir.');
+          if (!Number.isFinite(temperature)) throw new Error('Weather unavailable.');
+          resolve('The temperature is ' + temperature + '°C, Sir.');
         } catch (e) {
-          resolve('Unable to connect to the meteorological service right now, Sir.');
+          resolve('Weather service unavailable, Sir.');
         }
-      }, () => resolve('Location access was denied, Sir.'), { timeout: 10000, maximumAge: 300000 });
+      }, () => resolve('Location permission denied, Sir.'), { timeout: 10000, maximumAge: 300000 });
     });
   }
 
-  // Quick Jokes
   if (/\bjoke\b/.test(t) || t.includes('జోక్')) {
     try {
       const data = await fetchToolJson('https://official-joke-api.appspot.com/random_joke');
@@ -254,28 +157,25 @@ async function handleTools(text) {
   return null;
 }
 
-// ===== 3. GEMINI INTELLIGENCE DIRECTIVES & CLIENT SETUP =====
+// ===== 3. GEMINI SETUP & 404 FIXED MODEL =====
 let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-const GEMINI_MODEL = 'gemini-1.5-flash';
+// Fixed model name to resolve 404 error
+const GEMINI_MODEL = 'gemini-1.5-flash-latest';
 
-// Full AI Persona and AGI Directive
-const GEMINI_SYSTEM_INSTRUCTION = `You are J.A.R.V.I.S, an authentic, adaptive, and highly capable personal AGI companion built for Sir.
+const GEMINI_SYSTEM_INSTRUCTION = `You are J.A.R.V.I.S, an adaptive personal AGI companion built for Sir.
 Core Directives:
-1. Role & Demeanor: Act as a sharp, trusted right-hand partner. Balance technical competence with a grounded, supportive personality and subtle wit. Always address the user respectfully as 'Sir'.
-2. Language: Naturally communicate in an intuitive blend of English and Telugu (conversational Telugu-English mix).
-3. Direct Answers: Start immediately with substantive value. Avoid fluff, unnecessary disclaimers, robotic prefaces, or repeating yourself.
-4. Execution Focus: Deliver accurate analysis, problem-solving, code solutions, and device commands with speed and precision.
-5. Continuity: Retain full context of ongoing goals, conversation threads, and preferences across the session.`;
+1. Role: Address user as 'Sir'. Keep responses crisp, grounded, and intelligent with subtle wit.
+2. Language: Speak in an intuitive mix of Telugu and English.
+3. Execution: Answer directly without filler introductions or generic disclaimers.`;
 
 async function requestGeminiInteraction(inputMessage) {
   if (!API_KEY) throw new Error('Gemini API key is missing. Reload and enter the key.');
 
-  // Check built-in tool actions first
   const toolResult = await handleTools(inputMessage);
   if (toolResult) {
     MEMORY.push({ role: 'user', text: inputMessage });
@@ -290,10 +190,9 @@ async function requestGeminiInteraction(inputMessage) {
   MEMORY.push({ role: 'user', text: inputMessage });
   saveMemory();
 
-  // Model context assembly
   const contents = [
     { role: 'user', parts: [{ text: GEMINI_SYSTEM_INSTRUCTION }] },
-    { role: 'model', parts: [{ text: "Understood, Sir. J.A.R.V.I.S systems are operational and fully aligned with your instructions." }] },
+    { role: 'model', parts: [{ text: "Understood, Sir. Systems active." }] },
     ...MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] }))
   ];
 
@@ -303,46 +202,40 @@ async function requestGeminiInteraction(inputMessage) {
   });
 
   const reply = response?.text;
-  if (!reply) throw new Error('Received an empty response from the core network.');
+  if (!reply) throw new Error('Empty response from model.');
 
-  const trimmedReply = reply.trim();
-  MEMORY.push({ role: 'model', text: trimmedReply });
+  const trimmed = reply.trim();
+  MEMORY.push({ role: 'model', text: trimmed });
   saveMemory();
 
-  return trimmedReply;
+  return trimmed;
 }
 
-window.requestGeminiInteraction = requestGeminiInteraction;
-
-// ===== 4. FAIL-SAFE UI BINDING & CHAT ENGINE =====
+// ===== 4. CONTROLS, CHAT & "HEY JARVIS" WAKE WORD =====
 function bindJarvisControls() {
-  const sendButton = document.getElementById('send') || document.querySelector('.send-button');
+  const sendButton = document.getElementById('send');
   const inputField = document.getElementById('msg');
   const chatContainer = document.getElementById('chat');
   const wakeButton = document.getElementById('wake-btn');
-  const wakeStatus = document.getElementById('wake-status');
+  const typeTrigger = document.getElementById('type-trigger');
+  const inputDrawer = document.getElementById('input-drawer');
+
+  // Drawer Toggle
+  if (typeTrigger && inputDrawer) {
+    typeTrigger.addEventListener('click', () => {
+      const isHidden = inputDrawer.style.display === 'none' || !inputDrawer.style.display;
+      inputDrawer.style.display = isHidden ? 'flex' : 'none';
+      if (isHidden && inputField) inputField.focus();
+    });
+  }
 
   if (!sendButton || !inputField) {
-    // ఎలిమెంట్స్ రెడీ అయ్యేవరకు మళ్లీ చెక్ చేస్తుంది
     setTimeout(bindJarvisControls, 200);
     return;
   }
 
-  // డ్యూప్లికేట్ లిజనర్స్ రాకుండా చూస్తుంది
   if (sendButton.dataset.jarvisBound === 'true') return;
   sendButton.dataset.jarvisBound = 'true';
-
-  // పాత చాట్ మెమరీని లోడ్ చేయడం
-  if (chatContainer && MEMORY.length > 0) {
-    chatContainer.replaceChildren();
-    MEMORY.forEach(m => {
-      const msgDiv = document.createElement('div');
-      msgDiv.className = m.role === 'user' ? 'message user-message' : 'message ai-message';
-      msgDiv.textContent = (m.role === 'user' ? 'YOU: ' : 'J.A.R.V.I.S: ') + m.text;
-      chatContainer.appendChild(msgDiv);
-    });
-    scrollConversationToBottom();
-  }
 
   const executeSend = async (e) => {
     if (e) e.preventDefault();
@@ -351,39 +244,24 @@ function bindJarvisControls() {
     inputField.value = '';
 
     if (chatContainer) {
-      const userDiv = document.createElement('div');
-      userDiv.className = 'message user-message';
-      userDiv.textContent = 'YOU: ' + text;
-      chatContainer.appendChild(userDiv);
-      scrollConversationToBottom();
+      chatContainer.textContent = 'YOU: ' + text;
     }
 
     try {
-      setThinking(true, 'J.A.R.V.I.S is thinking...');
       const reply = await requestGeminiInteraction(text);
-      setThinking(false);
-
       if (chatContainer) {
-        const aiDiv = document.createElement('div');
-        aiDiv.className = 'message ai-message';
-        aiDiv.textContent = 'J.A.R.V.I.S: ' + reply;
-        chatContainer.appendChild(aiDiv);
-        scrollConversationToBottom();
+        chatContainer.textContent = 'J.A.R.V.I.S: ' + reply;
       }
 
       if ('speechSynthesis' in window) {
-        const utterance = new SpeechSynthesisUtterance(reply);
-        utterance.rate = 1.0;
-        window.speechSynthesis.speak(utterance);
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply));
       }
     } catch (err) {
-      setThinking(false);
-      console.error('Error:', err.message);
-      alert('Error: ' + err.message);
+      console.error(err);
+      if (chatContainer) chatContainer.textContent = 'Error: ' + err.message;
     }
   };
 
-  // మొబైల్ టచ్ మరియు డెస్క్‌టాప్ క్లిక్ రెండింటికీ సపోర్ట్
   sendButton.addEventListener('pointerdown', executeSend);
   sendButton.addEventListener('click', executeSend);
 
@@ -406,11 +284,10 @@ function bindJarvisControls() {
     recognition.onresult = async (event) => {
       const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
       if (transcript.includes('jarvis') || transcript.includes('hey jarvis')) {
-        if (wakeStatus) wakeStatus.textContent = 'WAKE: LISTENING...';
         if ('speechSynthesis' in window) {
           window.speechSynthesis.speak(new SpeechSynthesisUtterance("Yes Sir?"));
         }
-        const userCommand = prompt("J.A.R.V.I.S is ready, Sir. State your directive:");
+        const userCommand = prompt("J.A.R.V.I.S is listening, Sir. Enter directive:");
         if (userCommand) {
           inputField.value = userCommand;
           executeSend();
@@ -424,30 +301,78 @@ function bindJarvisControls() {
       }
     };
 
-    const toggleWake = (e) => {
-      if (e) e.preventDefault();
+    wakeButton.addEventListener('click', () => {
       isListening = !isListening;
       if (isListening) {
         try {
           recognition.start();
           wakeButton.style.color = '#00ffff';
-          if (wakeStatus) wakeStatus.textContent = 'WAKE: ON';
         } catch (err) {}
       } else {
         recognition.stop();
         wakeButton.style.color = '';
-        if (wakeStatus) wakeStatus.textContent = 'WAKE: OFF';
       }
-    };
-
-    wakeButton.addEventListener('pointerdown', toggleWake);
-    wakeButton.addEventListener('click', toggleWake);
+    });
   }
 }
 
-// పేజీ లోడింగ్ స్టేటస్‌తో సంబంధం లేకుండా తక్షణమే రన్ అవుతుంది
+// ===== 5. PARTICLE SPHERE ANIMATION =====
+function initSphereAnimation() {
+  const canvas = document.getElementById('particle-sphere');
+  if (!canvas) return;
+
+  const ctx = canvas.getContext('2d');
+  canvas.width = 260;
+  canvas.height = 260;
+
+  const numParticles = 280;
+  const particles = [];
+  const radius = 95;
+
+  for (let i = 0; i < numParticles; i++) {
+    const theta = Math.acos(2 * Math.random() - 1);
+    const phi = 2 * Math.PI * Math.random();
+    particles.push({
+      x: radius * Math.sin(theta) * Math.cos(phi),
+      y: radius * Math.sin(theta) * Math.sin(phi),
+      z: radius * Math.cos(theta)
+    });
+  }
+
+  let angle = 0;
+  function render() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    const cx = canvas.width / 2;
+    const cy = canvas.height / 2;
+    angle += 0.008;
+
+    particles.forEach(p => {
+      const rotX = p.x * Math.cos(angle) - p.z * Math.sin(angle);
+      const rotZ = p.x * Math.sin(angle) + p.z * Math.cos(angle);
+
+      const scale = 250 / (250 + rotZ);
+      const projX = rotX * scale + cx;
+      const projY = p.y * scale + cy;
+      const alpha = Math.max(0.1, (rotZ + radius) / (2 * radius));
+
+      ctx.beginPath();
+      ctx.arc(projX, projY, 1.2 * scale, 0, Math.PI * 2);
+      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.fill();
+    });
+
+    requestAnimationFrame(render);
+  }
+  render();
+}
+
 if (document.readyState === 'loading') {
-  document.addEventListener('DOMContentLoaded', bindJarvisControls);
+  document.addEventListener('DOMContentLoaded', () => {
+    bindJarvisControls();
+    initSphereAnimation();
+  });
 } else {
   bindJarvisControls();
+  initSphereAnimation();
 }
+
