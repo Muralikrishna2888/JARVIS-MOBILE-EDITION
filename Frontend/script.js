@@ -163,52 +163,139 @@ function initJarvisApp() {
       if (index === 0) {
         // Jarvis Core
         location.reload();
-      } 
-      else if (index === 1) {
-        // Today Tab[span_8](start_span)[span_8](end_span)
-        if (coreStage) coreStage.style.display = 'none';
-        if (chatContainer) {
-          chatContainer.innerHTML = `
-            <div class="today-dashboard">
-              <div class="today-header"><h2>Fri, 30 Oct</h2><button class="brief-btn">Brief me</button></div>
-              <div class="section-title">NO DATE YET</div>
-              <div class="task-card"><div class="task-title">building a Jarvis to control the phone</div><div class="task-footer"><span>you owe · open 24d</span><span class="t-done">✓ Done</span></div></div>
-              <div class="task-card"><div class="task-title">writing biology workbook procedure</div><div class="task-footer"><span>you owe</span><span class="t-done">✓ Done</span></div></div>
-            </div>
-          `;
-        }
+function initJarvisApp() {
+  const sendButton = document.getElementById('send');
+  const inputField = document.getElementById('msg');
+  const chatContainer = document.getElementById('chat');
+  const typeTrigger = document.getElementById('type-trigger');
+  const inputDrawer = document.getElementById('input-drawer');
+  const historyToggle = document.getElementById('history-toggle');
+  const settingsBtn = document.getElementById('settings-btn');
+  const bottomTabs = document.querySelectorAll('.bottom-tabs .tab-item');
+  const coreStage = document.getElementById('core-stage');
+
+  // Send message execution handler
+  const executeSend = async (text) => {
+    if (!text) return;
+    if (coreStage) coreStage.classList.add('chat-active');
+    if (chatContainer) {
+      chatContainer.innerHTML += `<div class="user-bubble-wrapper"><span class="user-name-tag">${localStorage.getItem('userName') || 'Eshwar'}</span><div class="user-bubble">${text}</div></div>`;
+    }
+    try {
+      const reply = await requestGeminiInteraction(text);
+      if (chatContainer) {
+        chatContainer.innerHTML += `<div class="ai-bubble">${reply}</div>`;
       }
-      else if (index === 2) {
-        // MEMORY TAB (Screenshot 1)[span_9](start_span)[span_9](end_span)
-        if (coreStage) coreStage.style.display = 'none';
-        if (chatContainer) {
-          chatContainer.innerHTML = `
-            <div class="memory-view">
-              <input type="text" class="memory-search" placeholder="Search what Jarvis knows...">
-              <div class="memory-card">
-                <div class="m-card-top"><span>You</span><span class="tag-new">NEW</span></div>
-                <div class="m-text">Your name is Ishwar.</div>
-                <span class="close-x">✕</span>
-              </div>
-              <div class="memory-footer-note">Everything lives on this phone. Tap to edit, delete anything, anytime.</div>
-            </div>
-          `;
-        }
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply));
       }
-      else if (index === 3) {
-        // FILES TAB (Screenshot 2)[span_10](start_span)[span_10](end_span)
-        if (coreStage) coreStage.style.display = 'none';
-        if (chatContainer) {
-          chatContainer.innerHTML = `
-            <div class="files-view">
-              <input type="text" class="memory-search" placeholder="Search your files...">
-              <div class="file-item"><h3>Eshwar's Photo</h3><p>![User photo](content://media/external/images/media/123)</p><span class="f-time">11h ago</span></div>
-              <div class="file-item"><h3>బయాలజీ వర్క్ బుక్ - లాక్టోబాసిల్లస్ ప్రొసీజర్</h3><p>Buttermilk</p><span class="f-time">2d ago</span></div>
-              <div class="file-item"><h3>Hindi Exam Prep Plan</h3><p>[] సిలబస్ మొత్తం ఒకసారి చూడు</p><span class="f-time">22d ago</span></div>
+    } catch (err) {
+      if (chatContainer) chatContainer.innerHTML += `<div class="ai-bubble" style="color:#ef4444">Error: ${err.message}</div>`;
+    }
+  };
+
+  if (sendButton && inputField) {
+    sendButton.addEventListener('click', (e) => { 
+      e.preventDefault(); 
+      executeSend(inputField.value.trim()); 
+      inputField.value=''; 
+    });
+  }
+
+  // ===== SETTINGS BUTTON EVENT & UI =====
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      if (coreStage) coreStage.style.display = 'none';
+      if (chatContainer) {
+        chatContainer.innerHTML = `
+          <div class="history-view">
+            <div class="history-header">
+              <span class="back-arrow" id="back-to-jarvis">‹</span>
+              <h2>Settings</h2>
+              <span></span>
             </div>
-          `;
-        }
+
+            <div class="history-item" id="set-assistants" style="cursor: pointer;">
+              <div class="h-title">Assistants</div>
+              <div class="h-sub">3 assistants ></div>
+            </div>
+
+            <div class="h-section">APP</div>
+
+            <div class="history-item" id="set-username" style="cursor: pointer;">
+              <div class="h-title">User Name</div>
+              <div class="h-sub">Current: ${localStorage.getItem('userName') || 'Eshwar'} ></div>
+            </div>
+
+            <div class="history-item" id="set-phone-assistant" style="cursor: pointer;">
+              <div class="h-title">Set as phone assistant</div>
+              <div class="h-sub" style="color: #60a5fa;">Set up ></div>
+            </div>
+            <div style="font-size: 11px; color: #71717a; margin: 4px 0 12px 4px;">
+              Then hold the power button, or swipe in from a bottom corner, to reach Jarvis from any screen.
+            </div>
+
+            <div class="h-section">ADVANCED</div>
+
+            <div class="history-item" id="set-api-key" style="cursor: pointer;">
+              <div class="h-title">Key</div>
+              <div class="h-sub">••••${(localStorage.getItem('jarvis_key') || '').slice(-4)} ></div>
+            </div>
+
+            <div class="h-section">ABOUT</div>
+            <div class="history-item">
+              <div class="h-title">Privacy</div>
+            </div>
+          </div>
+        `;
+
+        // Back button action
+        document.getElementById('back-to-jarvis').addEventListener('click', () => location.reload());
+
+        // 1. Change User Name
+        document.getElementById('set-username').addEventListener('click', () => {
+          const newName = prompt("మీ కొత్త పేరును నమోదు చేయండి:", localStorage.getItem('userName') || 'Eshwar');
+          if (newName && newName.trim() !== '') {
+            localStorage.setItem('userName', newName.trim());
+            alert("యూజర్ పేరు విజయవంతంగా మార్చబడింది సార్!");
+            settingsBtn.click(); // Refresh settings UI
+          }
+        });
+
+        // 2. Set as Phone Assistant Option
+        document.getElementById('set-phone-assistant').addEventListener('click', () => {
+          alert("Opening phone assistant settings, Sir.");
+          window.location.href = 'intent:#Intent;action=android.settings.VOICE_INPUT_SETTINGS;end';
+        });
+
+        // 3. Set API Key
+        document.getElementById('set-api-key').addEventListener('click', () => {
+          const currentKey = localStorage.getItem('jarvis_key') || '';
+          const newKey = prompt("కొత్త Gemini API Key ని నమోదు చేయండి:", currentKey);
+          if (newKey && newKey.trim() !== '') {
+            localStorage.setItem('jarvis_key', newKey.trim());
+            API_KEY = newKey.trim();
+            alert("API Key విజయవంతంగా సేవ్ చేయబడింది సార్!");
+            settingsBtn.click();
+          }
+        });
+
+        // 4. Assistants click
+        document.getElementById('set-assistants').addEventListener('click', () => {
+          alert("Jarvis AGI Core v3.8 Active, Sir.");
+        });
       }
+    });
+  }
+  // ======================================
+
+  // Bottom Tabs Navigation
+  bottomTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => {
+      bottomTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
+      if (index === 0) location.reload();
     });
   });
 
