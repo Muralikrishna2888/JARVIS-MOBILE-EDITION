@@ -54,7 +54,6 @@ body.jarvis-dark {
   justify-content: center;
 }
 
-/* CENTER STAGE */
 .core-stage {
   display: flex;
   flex-direction: column;
@@ -64,11 +63,12 @@ body.jarvis-dark {
   width: 100%;
   position: relative;
   padding: 0 20px;
+  gap: 12px; /* స్పియర్ మరియు టెక్స్ట్ మధ్య సరైన గ్యాప్ ఉంచడానికి */
 }
 
 .sphere-wrapper {
-  width: 280px;
-  height: 280px;
+  width: 240px;
+  height: 240px;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -76,15 +76,14 @@ body.jarvis-dark {
 }
 
 #particle-sphere {
-  width: 280px !important;
-  height: 280px !important;
+  width: 240px !important;
+  height: 240px !important;
   display: block;
 }
 
-
 .greeting-box {
   text-align: center;
-  margin-top: 20px;
+  margin-top: 0px;
 }
 
 .greeting-box h1 {
