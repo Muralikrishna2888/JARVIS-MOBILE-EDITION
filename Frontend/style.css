@@ -224,3 +224,51 @@ body.jarvis-dark {
   justify-content: center;
   font-weight: 700;
 }
+/* HISTORY, MEMORY & FILES STYLES */
+.history-view, .memory-view, .files-view {
+  padding: 16px;
+  color: #fff;
+  max-width: 420px;
+  margin: 0 auto;
+}
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 22px;
+  margin-bottom: 16px;
+}
+.back-arrow { font-size: 30px; cursor: pointer; }
+.h-section { font-size: 11px; color: #71717a; font-weight: bold; margin: 16px 0 8px 0; letter-spacing: 1px; }
+.history-item { background: #18181b; border: 1px solid #27272a; padding: 12px; border-radius: 12px; margin-bottom: 8px; }
+.h-title { font-size: 14px; font-weight: 500; }
+.h-sub { font-size: 11px; color: #71717a; margin-top: 4px; }
+
+.memory-search {
+  width: 100%;
+  background: #18181b;
+  border: 1px solid #27272a;
+  padding: 12px 16px;
+  border-radius: 14px;
+  color: #fff;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+.memory-card, .file-item {
+  background: #18181b;
+  border: 1px solid #27272a;
+  padding: 16px;
+  border-radius: 16px;
+  position: relative;
+  margin-bottom: 12px;
+}
+.m-card-top { display: flex; justify-content: space-between; font-size: 12px; color: #71717a; margin-bottom: 6px; }
+.tag-new { color: #60a5fa; font-weight: bold; }
+.m-text { font-size: 15px; font-weight: 500; }
+.close-x { position: absolute; top: 16px; right: 16px; color: #71717a; cursor: pointer; }
+.memory-footer-note { font-size: 11px; color: #71717a; text-align: center; margin-top: 24px; }
+
+.file-item h3 { font-size: 15px; margin-bottom: 4px; }
+.file-item p { font-size: 12px; color: #a1a1aa; }
+.f-time { font-size: 10px; color: #71717a; display: block; margin-top: 8px; }
+
