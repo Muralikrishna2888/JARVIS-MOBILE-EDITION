@@ -12,7 +12,6 @@ try {
   localStorage.removeItem('jarvis_memory');
 }
 
-const chat = document.getElementById('chat');
 const HISTORY_KEY = 'jarvis_conversation_history_v1';
 const ACTIVE_CONVERSATION_KEY = 'jarvis_active_conversation_v1';
 let CONVERSATIONS = [];
@@ -76,9 +75,11 @@ function saveMemory() {
 }
 
 function scrollConversationToBottom() {
-  if (!chat) return;
-  chat.scrollTop = chat.scrollHeight;
+  const chatContainer = document.getElementById('chat');
+  if (!chatContainer) return;
+  chatContainer.scrollTop = chatContainer.scrollHeight;
 }
+
 
 // ===== 2. ADVANCED DEVICE CONTROL & TOOLS ENGINE =====
 let torchStream = null;
@@ -107,7 +108,6 @@ async function toggleTorch(turnOn) {
 async function handleTools(text) {
   const t = text.toLowerCase().trim();
 
-  // 1. BATTERY STATUS CHECK
   if (t.includes('battery') || t.includes('charge') || t.includes('బ్యాటరీ') || t.includes('ఛార్జింగ్')) {
     if ('getBattery' in navigator) {
       const battery = await navigator.getBattery();
@@ -118,7 +118,6 @@ async function handleTools(text) {
     return 'Battery API is not supported on this browser, Sir.';
   }
 
-  // 2. FLASHLIGHT / TORCH CONTROL
   if (t.includes('flashlight') || t.includes('torch') || t.includes('టార్చ్') || t.includes('లైట్')) {
     if (t.includes('off') || t.includes('ఆఫ్') || t.includes('బంద్')) {
       return await toggleTorch(false);
@@ -126,7 +125,6 @@ async function handleTools(text) {
     return await toggleTorch(true);
   }
 
-  // 3. VIBRATION TEST
   if (t.includes('vibrate') || t.includes('వైబ్రేట్')) {
     if ('vibrate' in navigator) {
       navigator.vibrate([200, 100, 200]);
@@ -135,7 +133,6 @@ async function handleTools(text) {
     return 'Vibration not supported on this device, Sir.';
   }
 
-  // 4. SYSTEM PANELS (Wi-Fi, Bluetooth, Settings, Alarm)
   if (t.includes('wifi') || t.includes('wi-fi') || t.includes('వైఫై')) {
     window.location.href = 'intent:#Intent;action=android.settings.WIFI_SETTINGS;end';
     return 'Opening Wi-Fi settings, Sir.';
@@ -146,42 +143,17 @@ async function handleTools(text) {
     return 'Opening Bluetooth settings, Sir.';
   }
 
-  if (t.includes('alarm') || t.includes('అలారం')) {
-    window.location.href = 'intent:#Intent;action=android.intent.action.SHOW_ALARMS;end';
-    return 'Opening Alarms, Sir.';
-  }
-
-  // 5. UNIVERSAL NATIVE APP LAUNCHER
   const openAppMatch = t.match(/(?:open|launch|start|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (openAppMatch) {
     const rawAppName = openAppMatch[1].replace(/app|యాప్|ప్లీజ్|చేయి/gi, '').trim().toLowerCase();
-
-    const appIntents = {
-      'youtube': 'vnd.youtube:',
-      'spotify': 'spotify:',
-      'whatsapp': 'whatsapp://',
-      'instagram': 'instagram://app',
-      'telegram': 'tg://',
-      'chrome': 'googlechrome://',
-      'maps': 'geo:0,0',
-      'camera': 'intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end',
-      'gallery': 'intent:#Intent;action=android.intent.action.VIEW;type=image/*;end',
-      'calculator': 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CALCULATOR;end',
-      'settings': 'intent:#Intent;action=android.settings.SETTINGS;end',
-      'clock': 'intent:#Intent;action=android.intent.action.SHOW_ALARMS;end',
-      'contacts': 'intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.APP_CONTACTS;end'
-    };
-
-    if (appIntents[rawAppName]) {
-      window.location.href = appIntents[rawAppName];
-      return `Launching ${rawAppName} app, Sir.`;
-    } else {
-      window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${rawAppName};end`;
-      return `Attempting to open ${rawAppName}, Sir.`;
+    if (rawAppName === 'youtube') {
+      window.location.href = 'vnd.youtube:';
+      return 'Opening YouTube app, Sir.';
     }
+    window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${rawAppName};end`;
+    return `Attempting to open ${rawAppName}, Sir.`;
   }
 
-  // 6. YOUTUBE SEARCH & PLAY DIRECT IN APP
   if (t.includes('play') || t.includes('పాట')) {
     const query = text.replace(/play|on youtube|youtube|jarvis|పాట|పెట్టు/gi, '').trim();
     if (query) {
@@ -190,41 +162,12 @@ async function handleTools(text) {
     }
   }
 
-  // 7. PHONE CALL & DIALER
-  if (t.includes('call') || t.includes('కాల్')) {
-    const numMatch = t.match(/\d{10,}/);
-    if (numMatch) {
-      window.location.href = `tel:${numMatch[0]}`;
-      return `Calling ${numMatch[0]}, Sir.`;
-    }
-    window.location.href = 'tel:';
-    return 'Opening phone dialer, Sir.';
-  }
-
-  // 8. TIME & WEATHER
   if (/\b(?:what time|current time|time now)\b/.test(t) || t.includes('టైమ్') || t.includes('సమయం')) {
     return 'The time is ' + new Date().toLocaleTimeString('en-IN', { timeZone: 'Asia/Kolkata', hour: 'numeric', minute: '2-digit' }) + ' IST, Sir.';
   }
 
-  if (t.includes('weather') || t.includes('వాతావరణం')) {
-    if (!navigator.geolocation) return 'Location permission required for weather, Sir.';
-    return await new Promise(resolve => {
-      navigator.geolocation.getCurrentPosition(async position => {
-        try {
-          const url = `https://api.open-meteo.com/v1/forecast?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&current_weather=true`;
-          const data = await fetchToolJson(url);
-          const temperature = Number(data?.current_weather?.temperature);
-          resolve(`The current temperature is ${temperature}°C, Sir.`);
-        } catch (e) {
-          resolve('Weather service unavailable, Sir.');
-        }
-      }, () => resolve('Location permission denied, Sir.'), { timeout: 10000 });
-    });
-  }
-
   return null;
 }
-
 
 
 // ===== 3. GEMINI SETUP & 404 FIXED MODEL =====
@@ -234,7 +177,6 @@ if (!API_KEY) {
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-// Fixed model name to resolve 404 error
 const GEMINI_MODEL = 'gemini-2.5-flash';
 
 const GEMINI_SYSTEM_INSTRUCTION = `You are J.A.R.V.I.S, an adaptive personal AGI companion built for Sir.
@@ -244,7 +186,7 @@ Core Directives:
 3. Execution: Answer directly without filler introductions or generic disclaimers.`;
 
 async function requestGeminiInteraction(inputMessage) {
-  if (!API_KEY) throw new Error('Gemini API key is missing. Reload and enter the key.');
+  if (!API_KEY) throw new Error('Gemini API key is missing.');
 
   const toolResult = await handleTools(inputMessage);
   if (toolResult) {
@@ -254,7 +196,7 @@ async function requestGeminiInteraction(inputMessage) {
     return toolResult;
   }
 
-  const { GoogleGenAI } = await import('@google/genai');
+  const { GoogleGenAI } = await import('https://esm.run/@google/genai');
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
   MEMORY.push({ role: 'user', text: inputMessage });
@@ -281,115 +223,147 @@ async function requestGeminiInteraction(inputMessage) {
   return trimmed;
 }
 
-// ===== 4. CONTROLS, CHAT & "HEY JARVIS" WAKE WORD =====
-function bindJarvisControls() {
+
+// ===== 4. CONTROLS, CHAT & UI BINDINGS =====
+document.addEventListener('DOMContentLoaded', () => {
+  initJarvisApp();
+});
+
+function initJarvisApp() {
   const sendButton = document.getElementById('send');
   const inputField = document.getElementById('msg');
   const chatContainer = document.getElementById('chat');
-  const wakeButton = document.getElementById('wake-btn');
   const typeTrigger = document.getElementById('type-trigger');
   const inputDrawer = document.getElementById('input-drawer');
+  const historyToggle = document.getElementById('history-toggle');
+  const settingsBtn = document.getElementById('settings-btn');
+  const bottomTabs = document.querySelectorAll('.bottom-tabs .tab-item');
+  const coreStage = document.getElementById('core-stage');
+  const thinkingStatus = document.getElementById('thinking-status');
+  const thinkingPill = document.getElementById('thinking-pill');
 
-  // Drawer Toggle
+  const executeSend = async (customText = null) => {
+    const text = (customText !== null ? customText : inputField.value).trim();
+    if (!text) return;
+    inputField.value = '';
+
+    if (coreStage) coreStage.classList.add('chat-active');
+    if (thinkingStatus) thinkingStatus.style.display = 'block';
+    if (thinkingPill) thinkingPill.style.display = 'flex';
+
+    if (chatContainer) {
+      const bubbleWrap = document.createElement('div');
+      bubbleWrap.className = 'user-bubble-wrapper';
+      bubbleWrap.innerHTML = `
+        <span class="user-name-tag">Eshwar</span>
+        <div class="user-bubble">${text}</div>
+      `;
+      chatContainer.appendChild(bubbleWrap);
+      scrollConversationToBottom();
+    }
+
+    try {
+      let reply = await handleTools(text);
+      if (!reply) {
+        reply = await requestGeminiInteraction(text);
+      }
+
+      if (thinkingStatus) thinkingStatus.style.display = 'none';
+      if (thinkingPill) thinkingPill.style.display = 'none';
+
+      if (chatContainer) {
+        const aiBubble = document.createElement('div');
+        aiBubble.className = 'ai-bubble';
+        aiBubble.textContent = reply;
+        chatContainer.appendChild(aiBubble);
+        scrollConversationToBottom();
+      }
+
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+        const utterance = new SpeechSynthesisUtterance(reply);
+        window.speechSynthesis.speak(utterance);
+      }
+    } catch (err) {
+      if (thinkingStatus) thinkingStatus.style.display = 'none';
+      if (thinkingPill) thinkingPill.style.display = 'none';
+      if (chatContainer) {
+        const errDiv = document.createElement('div');
+        errDiv.className = 'ai-bubble';
+        errDiv.style.color = '#ef4444';
+        errDiv.textContent = 'Error: ' + err.message;
+        chatContainer.appendChild(errDiv);
+        scrollConversationToBottom();
+      }
+    }
+  };
+
+  if (sendButton) {
+    sendButton.addEventListener('click', (e) => { e.preventDefault(); executeSend(); });
+  }
+  if (inputField) {
+    inputField.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') { e.preventDefault(); executeSend(); }
+    });
+  }
+
   if (typeTrigger && inputDrawer) {
     typeTrigger.addEventListener('click', () => {
       const isHidden = inputDrawer.style.display === 'none' || !inputDrawer.style.display;
       inputDrawer.style.display = isHidden ? 'flex' : 'none';
-      if (isHidden && inputField) inputField.focus();
+      if (isHidden) inputField.focus();
     });
   }
 
-  if (!sendButton || !inputField) {
-    setTimeout(bindJarvisControls, 200);
-    return;
+  if (historyToggle) {
+    historyToggle.addEventListener('click', () => {
+      alert(`మెమరీలో ${MEMORY.length} సంభాషణలు సేవ్ చేయబడి ఉన్నాయి సార్.`);
+    });
   }
 
-  if (sendButton.dataset.jarvisBound === 'true') return;
-  sendButton.dataset.jarvisBound = 'true';
-
-  const executeSend = async (e) => {
-    if (e) e.preventDefault();
-    const text = inputField.value.trim();
-    if (!text) return;
-    inputField.value = '';
-
-    if (chatContainer) {
-      chatContainer.textContent = 'YOU: ' + text;
-    }
-
-    try {
-      const reply = await requestGeminiInteraction(text);
-      if (chatContainer) {
-        chatContainer.textContent = 'J.A.R.V.I.S: ' + reply;
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', () => {
+      const currentKey = localStorage.getItem('jarvis_key') || '';
+      const newKey = prompt("కొత్త Gemini API Key ని నమోదు చేయండి:", currentKey);
+      if (newKey && newKey.trim() !== '') {
+        localStorage.setItem('jarvis_key', newKey.trim());
+        API_KEY = newKey.trim();
+        alert("API Key విజయవంతంగా సేవ్ చేయబడింది సార్!");
       }
+    });
+  }
 
-      if ('speechSynthesis' in window) {
-        window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply));
-      }
-    } catch (err) {
-      console.error(err);
-      if (chatContainer) chatContainer.textContent = 'Error: ' + err.message;
-    }
-  };
-
-  sendButton.addEventListener('pointerdown', executeSend);
-  sendButton.addEventListener('click', executeSend);
-
-  inputField.addEventListener('keydown', (e) => {
-    if (e.key === 'Enter') {
-      e.preventDefault();
-      executeSend();
+  document.querySelectorAll('.action-tags span').forEach(tag => {
+    if (tag.textContent.trim() !== '·') {
+      tag.style.cursor = 'pointer';
+      tag.addEventListener('click', () => executeSend(tag.textContent.trim()));
     }
   });
 
-  // Wake Word Engine ("Hey Jarvis" / "Jarvis")
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (SpeechRecognition && wakeButton) {
-    let isListening = false;
-    const recognition = new SpeechRecognition();
-    recognition.continuous = true;
-    recognition.interimResults = false;
-    recognition.lang = 'en-US';
+  bottomTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => {
+      bottomTabs.forEach(t => t.classList.remove('active'));
+      tab.classList.add('active');
 
-    recognition.onresult = async (event) => {
-      const transcript = event.results[event.results.length - 1][0].transcript.toLowerCase();
-      if (transcript.includes('jarvis') || transcript.includes('hey jarvis')) {
-        if ('speechSynthesis' in window) {
-          window.speechSynthesis.speak(new SpeechSynthesisUtterance("Yes Sir?"));
-        }
-        const userCommand = prompt("J.A.R.V.I.S is listening, Sir. Enter directive:");
-        if (userCommand) {
-          inputField.value = userCommand;
-          executeSend();
-        }
-      }
-    };
-
-    recognition.onend = () => {
-      if (isListening) {
-        try { recognition.start(); } catch (err) {}
-      }
-    };
-
-    wakeButton.addEventListener('click', () => {
-      isListening = !isListening;
-      if (isListening) {
-        try {
-          recognition.start();
-          wakeButton.style.color = '#00ffff';
-        } catch (err) {}
-      } else {
-        recognition.stop();
-        wakeButton.style.color = '';
+      if (index === 1) executeSend("ఈరోజు వాతావరణం మరియు సమయం వివరాలు చెప్పు");
+      else if (index === 2) alert(`మెమరీలో మొత్తం ${MEMORY.length} అంశాలు ఉన్నాయి సార్.`);
+      else if (index === 3) {
+        let f = document.createElement('input');
+        f.type = 'file';
+        f.onchange = (e) => { if(e.target.files.length) executeSend(`ఫైల్ అప్‌లోడ్ చేయబడింది: ${e.target.files[0].name}`); };
+        f.click();
       }
     });
-  }
+  });
+
+  initSphereCore(executeSend);
 }
 
-// ===== 5. INTERACTIVE VOICE CORE (TOUCH TO SPEAK) =====
+
+// ===== 5. 3D SPHERE & TOUCH MIC CORE =====
 let isCoreListening = false;
 
-function initSphereAnimation() {
+function initSphereCore(onVoiceCommand) {
   const canvas = document.getElementById('particle-sphere');
   if (!canvas) return;
 
@@ -403,15 +377,14 @@ function initSphereAnimation() {
   canvas.style.cursor = 'pointer';
   ctx.scale(dpr, dpr);
 
-  const numParticles = 520;
   const particles = [];
+  const numParticles = 520;
   const baseRadius = 108;
   const goldenRatio = (1 + Math.sqrt(5)) / 2;
 
   for (let i = 0; i < numParticles; i++) {
     const theta = 2 * Math.PI * i / goldenRatio;
     const phi = Math.acos(1 - 2 * (i + 0.5) / numParticles);
-
     particles.push({
       nx: Math.sin(phi) * Math.cos(theta),
       ny: Math.sin(phi) * Math.sin(theta),
@@ -420,15 +393,12 @@ function initSphereAnimation() {
   }
 
   let angleY = 0;
-  let angleX = 0.25;
   let pulsePhase = 0;
 
   function render() {
     ctx.clearRect(0, 0, size, size);
-    const cx = size / 2;
-    const cy = size / 2;
+    const cx = size / 2, cy = size / 2;
 
-    // మైక్ ఆన్ లో ఉన్నప్పుడు కోర్ వేగంగా తిరుగుతూ పల్స్ అవుతుంది
     if (isCoreListening) {
       angleY += 0.022;
       pulsePhase += 0.12;
@@ -437,44 +407,24 @@ function initSphereAnimation() {
       pulsePhase = 0;
     }
 
-    const currentRadius = isCoreListening 
-      ? baseRadius + Math.sin(pulsePhase) * 6 
-      : baseRadius;
-
-    const cosY = Math.cos(angleY);
-    const sinY = Math.sin(angleY);
-    const cosX = Math.cos(angleX);
-    const sinX = Math.sin(angleX);
+    const currentRadius = isCoreListening ? baseRadius + Math.sin(pulsePhase) * 6 : baseRadius;
+    const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
 
     particles.forEach(p => {
-      const px = p.nx * currentRadius;
-      const py = p.ny * currentRadius;
-      const pz = p.nz * currentRadius;
-
+      const px = p.nx * currentRadius, py = p.ny * currentRadius, pz = p.nz * currentRadius;
       let x1 = px * cosY - pz * sinY;
       let z1 = pz * cosY + px * sinY;
 
-      let y1 = py * cosX - z1 * sinX;
-      let z2 = z1 * cosX + py * sinX;
-
       const fov = 320;
-      const scale = fov / (fov + z2);
+      const scale = fov / (fov + z1);
       const projX = x1 * scale + cx;
-      const projY = y1 * scale + cy;
+      const projY = py * scale + cy;
 
-      const normalizedZ = (z2 + currentRadius) / (2 * currentRadius);
-      const alpha = Math.max(0.12, Math.pow(normalizedZ, 1.6));
-      const dotSize = Math.max(0.8, (isCoreListening ? 1.8 : 1.55) * scale);
+      const alpha = Math.max(0.12, Math.pow((z1 + currentRadius) / (2 * currentRadius), 1.6));
 
       ctx.beginPath();
-      ctx.arc(projX, projY, dotSize, 0, Math.PI * 2);
-      
-      // మైక్ ఆన్ అయితే Cyan Blue రంగు, లేకపోతే White రంగు
-      if (isCoreListening) {
-        ctx.fillStyle = `rgba(0, 240, 255, ${alpha})`;
-      } else {
-        ctx.fillStyle = `rgba(235, 242, 255, ${alpha})`;
-      }
+      ctx.arc(projX, projY, Math.max(0.8, 1.55 * scale), 0, Math.PI * 2);
+      ctx.fillStyle = isCoreListening ? `rgba(0, 240, 255, ${alpha})` : `rgba(235, 242, 255, ${alpha})`;
       ctx.fill();
     });
 
@@ -482,87 +432,42 @@ function initSphereAnimation() {
   }
   render();
 
-  // ===== CORE TOUCH MIC LOGIC =====
   const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) {
-    canvas.addEventListener('click', () => alert("మీ బ్రౌజర్‌లో వాయిస్ రికగ్నిషన్ సపోర్ట్ లేదు సార్."));
-    return;
-  }
+  if (!SpeechRecognition) return;
 
   const coreMic = new SpeechRecognition();
-  coreMic.continuous = false; // ఒక కమాండ్ వినగానే ఆటోమేటిక్ గా ప్రాసెస్ చేస్తుంది
+  coreMic.continuous = false;
   coreMic.interimResults = false;
-  coreMic.lang = 'en-IN'; // ఇంగ్లీష్ మరియు ఇండియన్ యాక్సెంట్ సపోర్ట్
+  coreMic.lang = 'en-IN';
 
-  const activateCoreMic = (e) => {
-    if (e) e.preventDefault();
-    
-    // జార్విస్ మాట్లాడుతుంటే ఆపేసి మీ మాట వింటుంది
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
     if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-
     if (isCoreListening) {
       coreMic.stop();
       isCoreListening = false;
       return;
     }
-
     try {
       coreMic.start();
       isCoreListening = true;
-      if ('vibrate' in navigator) navigator.vibrate(40); // చిన్న వైబ్రేషన్ ఫీడ్‌బ్యాక్
-      
-      const subPrompt = document.querySelector('.sub-prompt');
-      if (subPrompt) subPrompt.textContent = "Listening, Sir... Speak now";
-    } catch (err) {
-      console.error(err);
-    }
-  };
+      if ('vibrate' in navigator) navigator.vibrate(40);
+    } catch (err) {}
+  });
 
   coreMic.onresult = (event) => {
     const voiceText = event.results[0][0].transcript.trim();
     isCoreListening = false;
-
-    const subPrompt = document.querySelector('.sub-prompt');
-    if (subPrompt) subPrompt.textContent = `"${voiceText}"`;
-
-    // మనం మాట్లాడిన టెక్స్ట్‌ని నేరుగా జార్విస్ కి పంపడం
-    const inputField = document.getElementById('msg');
-    const sendButton = document.getElementById('send');
-    if (inputField && sendButton) {
-      inputField.value = voiceText;
-      sendButton.click();
-    }
+    onVoiceCommand(voiceText);
   };
 
-  coreMic.onerror = () => {
-    isCoreListening = false;
-    const subPrompt = document.querySelector('.sub-prompt');
-    if (subPrompt) subPrompt.textContent = "Tap the core to speak, Sir";
-  };
-
-  coreMic.onend = () => {
-    isCoreListening = false;
-  };
-
-  // కోర్ పై టచ్ చేసినా లేదా క్లిక్ చేసినా మైక్ ఆన్ అవుతుంది
-  canvas.addEventListener('pointerdown', activateCoreMic);
+  coreMic.onerror = () => { isCoreListening = false; };
+  coreMic.onend = () => { isCoreListening = false; };
 }
-\'function updateName(newName) 
-{localStorage.setltem('userName',newName);}\'
 
-// ===== AUTOMATIC EVENT BINDING & FIX =====
-document.addEventListener('DOMContentLoaded', () => {
-  if (typeof bindJarvisControls === 'function') {
-    bindJarvisControls();
-  }
-  if (typeof initSphereAnimation === 'function') {
-    initSphereAnimation();
-  }
-});
+// Name Update Helper
+function updateName(newName) {
+  localStorage.setItem('userName', newName);
+}
 
-// ఒకవేళ ఆల్రెడీ లోడ్ అయి ఉంటే వెంటనే రన్ అవ్వడానికి
-setTimeout(() => {
-  if (typeof bindJarvisControls === 'function') {
-    bindJarvisControls();
-  }
-}, 500);
+      
