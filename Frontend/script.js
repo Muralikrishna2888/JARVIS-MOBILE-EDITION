@@ -550,4 +550,19 @@ function initSphereAnimation() {
 \'function updateName(newName) 
 {localStorage.setltem('userName',newName);}\'
 
+// ===== AUTOMATIC EVENT BINDING & FIX =====
+document.addEventListener('DOMContentLoaded', () => {
+  if (typeof bindJarvisControls === 'function') {
+    bindJarvisControls();
+  }
+  if (typeof initSphereAnimation === 'function') {
+    initSphereAnimation();
+  }
+});
 
+// ఒకవేళ ఆల్రెడీ లోడ్ అయి ఉంటే వెంటనే రన్ అవ్వడానికి
+setTimeout(() => {
+  if (typeof bindJarvisControls === 'function') {
+    bindJarvisControls();
+  }
+}, 500);
