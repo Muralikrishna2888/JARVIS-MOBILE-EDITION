@@ -148,70 +148,35 @@ function initJarvisApp() {
     });
   }
 
-  // Clock Button -> Full Screen History (Screenshot 1000420954)[span_6](start_span)[span_6](end_span)
+   // Clock Button -> Full Screen History
   if (historyToggle) {
     historyToggle.addEventListener('click', (e) => {
       e.preventDefault();
+      // హోమ్ స్క్రీన్ కంటెంట్ ని పూర్తిగా దాచడానికి
+      const coreStage = document.getElementById('core-stage');
+      const chatContainer = document.getElementById('chat');
+      if (coreStage) coreStage.style.display = 'none';
+      
       if (chatContainer) {
         chatContainer.innerHTML = `
-          <div class="history-view" style="padding: 16px; color: #fff; height: 100%; overflow-y: auto;">
-            <div class="history-header" style="display: flex; align-items: center; justify-content: space-between; font-size: 20px; margin-bottom: 20px;">
+          <div class="history-view" style="padding: 16px; color: #fff; width: 100%; height: 100vh; overflow-y: auto; background: #000; position: absolute; top: 0; left: 0; z-index: 999;">
+            <div class="history-header" style="display: flex; align-items: center; justify-content: space-between; font-size: 20px; margin-bottom: 20px; padding-top: 10px;">
               <span class="back-arrow" id="back-to-jarvis" style="cursor: pointer; font-size: 28px;">‹</span>
               <h2>History</h2>
               <span>🔍</span>
             </div>
             <div class="h-section" style="font-size: 11px; color: #71717a; font-weight: bold; margin: 12px 0;">TODAY</div>
-            ${CONVERSATIONS.filter(c => c.category === 'TODAY').map(c => `<div class="history-item" style="background: #18181b; padding: 12px; border-radius: 12px; margin-bottom: 8px;"><div style="font-weight: 500;">${c.title}</div><div style="font-size: 11px; color: #71717a; margin-top: 4px;">${c.time}</div></div>`).join('')}
+            ${CONVERSATIONS.filter(c => c.category === 'TODAY').map(c => `<div class="history-item" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;"><div style="font-weight: 500; font-size: 15px;">${c.title}</div><div style="font-size: 11px; color: #71717a; margin-top: 4px;">${c.time}</div></div>`).join('')}
             
-            <div class="h-section" style="font-size: 11px; color: #71717a; font-weight: bold; margin: 16px 0 12px 0;">THIS WEEK</div>
-            ${CONVERSATIONS.filter(c => c.category === 'THIS WEEK').map(c => `<div class="history-item" style="background: #18181b; padding: 12px; border-radius: 12px; margin-bottom: 8px;"><div style="font-weight: 500;">${c.title}</div><div style="font-size: 11px; color: #71717a; margin-top: 4px;">${c.time}</div></div>`).join('')}
+            <div class="h-section" style="font-size: 11px; color: #71717a; font-weight: bold; margin: 20px 0 12px 0;">THIS WEEK</div>
+            ${CONVERSATIONS.filter(c => c.category === 'THIS WEEK').map(c => `<div class="history-item" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;"><div style="font-weight: 500; font-size: 15px;">${c.title}</div><div style="font-size: 11px; color: #71717a; margin-top: 4px;">${c.time}</div></div>`).join('')}
           </div>
         `;
         document.getElementById('back-to-jarvis').addEventListener('click', () => location.reload());
       }
     });
   }
-
-  // Settings Button -> Full Screen Settings (Screenshot 1000420953)[span_7](start_span)[span_7](end_span)
-  if (settingsBtn) {
-    settingsBtn.addEventListener('click', (e) => {
-      e.preventDefault();
-      if (chatContainer) {
-        chatContainer.innerHTML = `
-          <div class="history-view" style="padding: 16px; color: #fff; height: 100%; overflow-y: auto;">
-            <div class="history-header" style="display: flex; align-items: center; justify-content: space-between; font-size: 20px; margin-bottom: 20px;">
-              <span class="back-arrow" id="back-to-jarvis" style="cursor: pointer; font-size: 28px;">‹</span>
-              <h2>Settings</h2>
-              <span></span>
-            </div>
-            <div class="history-item" id="set-username" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; cursor: pointer;">
-              <span>Username</span><span style="color: #888;">@${localStorage.getItem('userName') || 'eshwar'} ></span>
-            </div>
-            <div class="history-item" id="set-phone-assistant" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; cursor: pointer;">
-              <span>Set as phone assistant</span><span style="color: #60a5fa;">Set up ></span>
-            </div>
-            <div class="history-item" id="set-api-key" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px; display: flex; justify-content: space-between; cursor: pointer;">
-              <span>Gemini API Key</span><span style="color: #888;">Update ></span>
-            </div>
-          </div>
-        `;
-        document.getElementById('back-to-jarvis').addEventListener('click', () => location.reload());
-        
-        document.getElementById('set-username').addEventListener('click', () => {
-          const name = prompt("Enter your username:", localStorage.getItem('userName') || 'eshwar');
-          if(name) { localStorage.setItem('userName', name); settingsBtn.click(); }
-        });
-        document.getElementById('set-phone-assistant').addEventListener('click', () => {
-          window.location.href = 'intent:#Intent;action=android.settings.VOICE_INPUT_SETTINGS;end';
-        });
-        document.getElementById('set-api-key').addEventListener('click', () => {
-          const key = prompt("Enter new API Key:", localStorage.getItem('jarvis_key') || '');
-          if(key) { localStorage.setItem('jarvis_key', key); API_KEY = key; alert("API Key saved!"); }
-        });
-      }
-    });
-  }
-
+  
   // Bottom Tabs -> Full Screen Views (Today, Memory, Files)[span_8](start_span)[span_8](end_span)[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)
   bottomTabs.forEach((tab, index) => {
     tab.addEventListener('click', () => {
@@ -276,7 +241,9 @@ function initJarvisApp() {
   });
 }
 
-// ===== 5. 3D PARTICLE SPHERE ANIMATION =====
+// ===== 5. 3D PARTICLE SPHERE & TOUCH MIC ANIMATION =====
+let isCoreListening = false;
+
 function initParticleSphere() {
   const canvas = document.getElementById('particle-sphere');
   if (!canvas) return;
@@ -285,6 +252,7 @@ function initParticleSphere() {
   const dpr = window.devicePixelRatio || 1;
   canvas.width = size * dpr; canvas.height = size * dpr;
   canvas.style.width = size + 'px'; canvas.style.height = size + 'px';
+  canvas.style.cursor = 'pointer';
   ctx.scale(dpr, dpr);
 
   const particles = [];
@@ -303,30 +271,90 @@ function initParticleSphere() {
   }
 
   let angleY = 0;
+  let pulsePhase = 0;
+
   function render() {
     ctx.clearRect(0, 0, size, size);
-    angleY += 0.006;
+    
+    if (isCoreListening) {
+      angleY += 0.025;
+      pulsePhase += 0.15;
+    } else {
+      angleY += 0.006;
+      pulsePhase = 0;
+    }
+
+    const currentRadius = isCoreListening ? radius + Math.sin(pulsePhase) * 6 : radius;
     const cosY = Math.cos(angleY), sinY = Math.sin(angleY);
     const cx = size / 2, cy = size / 2;
 
     particles.forEach(p => {
-      let x1 = p.nx * radius * cosY - p.nz * radius * sinY;
-      let z1 = p.nz * radius * cosY + p.nx * radius * sinY;
-      let y1 = p.ny * radius;
+      let x1 = p.nx * currentRadius * cosY - p.nz * currentRadius * sinY;
+      let z1 = p.nz * currentRadius * cosY + p.nx * currentRadius * sinY;
+      let y1 = p.ny * currentRadius;
 
       const fov = 250;
       const scale = fov / (fov + z1);
       const projX = x1 * scale + cx;
       const projY = y1 * scale + cy;
 
-      const alpha = Math.max(0.2, (z1 + radius) / (2 * radius));
+      const alpha = Math.max(0.2, (z1 + currentRadius) / (2 * currentRadius));
       ctx.beginPath();
-      ctx.arc(projX, projY, Math.max(1, 1.4 * scale), 0, Math.PI * 2);
-      ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      ctx.arc(projX, projY, Math.max(1, (isCoreListening ? 1.8 : 1.4) * scale), 0, Math.PI * 2);
+      
+      // Mic on ayithe cyan color, lekunte white color lo glow avuthundi
+      if (isCoreListening) {
+        ctx.fillStyle = `rgba(0, 240, 255, ${alpha})`;
+      } else {
+        ctx.fillStyle = `rgba(255, 255, 255, ${alpha})`;
+      }
       ctx.fill();
     });
     requestAnimationFrame(render);
   }
   render();
-}
 
+  // Speech Recognition integration for Sphere Touch
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  const coreMic = new SpeechRecognition();
+  coreMic.continuous = false;
+  coreMic.interimResults = false;
+  coreMic.lang = 'en-IN';
+
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    
+    if (isCoreListening) {
+      coreMic.stop();
+      isCoreListening = false;
+      return;
+    }
+
+    try {
+      coreMic.start();
+      isCoreListening = true;
+      if ('vibrate' in navigator) navigator.vibrate(40);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  coreMic.onresult = (event) => {
+    const voiceText = event.results[0][0].transcript.trim();
+    isCoreListening = false;
+    
+    // Voice command ni execute cheyadaniki input field lo petti send kottadam
+    const inputField = document.getElementById('msg');
+    const sendButton = document.getElementById('send');
+    if (inputField && sendButton) {
+      inputField.value = voiceText;
+      sendButton.click();
+    }
+  };
+
+  coreMic.onerror = () => { isCoreListening = false; };
+  coreMic.onend = () => { isCoreListening = false; };
+}
