@@ -382,8 +382,6 @@ function initJarvisApp() {
   }
 
   // 3. Bottom Tabs -> Full Screen Views
-  bottomTabs.forEach((tab, index) => {
-    tab.addEventListener('click', () => {
       bottomTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
 
