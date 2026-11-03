@@ -73,6 +73,7 @@ body.jarvis-dark {
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  \'transition:transform 0\.5s ease-in-out;\
 }
 
 #particle-sphere {
