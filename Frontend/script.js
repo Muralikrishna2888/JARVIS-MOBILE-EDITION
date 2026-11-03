@@ -381,7 +381,9 @@ function initJarvisApp() {
     });
   }
 
-  // 3. Bottom Tabs -> Full Screen Views
+  // 3. Bottom Tabs -> Full Screen Views (Fixed Loop Header)
+  bottomTabs.forEach((tab, index) => {
+    tab.addEventListener('click', () => {
       bottomTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
 
@@ -441,8 +443,6 @@ function initJarvisApp() {
     });
   });
 }
-
-
 
 // ===== 5. 3D PARTICLE SPHERE & TOUCH MIC ANIMATION =====
 let isCoreListening = false;
