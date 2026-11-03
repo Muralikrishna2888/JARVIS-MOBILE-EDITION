@@ -190,8 +190,9 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 function initJarvisApp() {
-  const sendButton = document.getElementById('send');
-  const inputField = document.getElementById('msg');
+  // Input mariyu Send Button elements ni safe ga select cheyadam
+  const sendButton = document.getElementById('send') || document.querySelector('.send-btn, button[type="submit"]');
+  const inputField = document.getElementById('msg') || document.querySelector('input[type="text"]');
   const chatContainer = document.getElementById('chat');
   const typeTrigger = document.getElementById('type-trigger');
   const inputDrawer = document.getElementById('input-drawer');
@@ -199,59 +200,87 @@ function initJarvisApp() {
   const settingsBtn = document.getElementById('settings-btn');
   const bottomTabs = document.querySelectorAll('.bottom-tabs .tab-item');
   const coreStage = document.getElementById('core-stage');
-  const greetingBox = document.querySelector('.greeting-box');
+  const greetingBox = document.querySelector('.greeting-box') || document.querySelector('.greeting');
 
   const executeSend = async (text) => {
-    if (!text) return;
+    if (!text || !text.trim()) return;
+    const cleanText = text.trim();
     
-    // History loki instant ga save chesthundhi
-    saveToHistory(text);
+    // History lo save cheyadam
+    if (typeof saveToHistory === 'function') {
+      saveToHistory(cleanText);
+    }
 
+    // Sphere పైకి వెళ్లి చిన్నదై రొటేట్ అవ్వడానికి
     if (coreStage) coreStage.classList.add('chat-active');
     if (greetingBox) greetingBox.style.display = 'none';
 
+    // 1. User Message Display
     if (chatContainer) {
-      chatContainer.innerHTML += `
-        <div class="user-bubble-wrapper" style="text-align: right; margin: 10px 0;">
-          <span class="user-name-tag" style="font-size: 11px; color: #888;">${localStorage.getItem('userName') || 'Eshwar'}</span>
-          <div class="user-bubble" style="background: #27272a; padding: 10px 14px; border-radius: 14px; display: inline-block; color: #fff;">${text}</div>
+      const userBubble = document.createElement('div');
+      userBubble.style.cssText = 'text-align: right; margin: 10px 0; width: 100%;';
+      userBubble.innerHTML = `
+        <div style="font-size: 11px; color: #888; margin-bottom: 2px;">${localStorage.getItem('userName') || 'Eshwar'}</div>
+        <div style="background: #27272a; padding: 10px 16px; border-radius: 16px; display: inline-block; color: #fff; font-size: 15px; max-width: 80%; text-align: left;">
+          ${cleanText}
         </div>
       `;
+      chatContainer.appendChild(userBubble);
+
+      // 2. Thinking Indicator Display
+      const thinkingBubble = document.createElement('div');
+      thinkingBubble.id = 'thinking-indicator';
+      thinkingBubble.style.cssText = 'color: #3b82f6; font-size: 13px; font-weight: 500; margin: 8px 0; display: flex; align-items: center; gap: 6px;';
+      thinkingBubble.innerHTML = `<span>●</span> <em>Thinking it over...</em>`;
+      chatContainer.appendChild(thinkingBubble);
+      chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
+    // 3. AI Interaction
     try {
-      const reply = await requestGeminiInteraction(text);
+      const reply = await requestGeminiInteraction(cleanText);
+      
+      const indicator = document.getElementById('thinking-indicator');
+      if (indicator) indicator.remove();
+
       if (chatContainer) {
-        chatContainer.innerHTML += `
-          <div class="ai-bubble" style="background: #18181b; padding: 12px; border-radius: 14px; margin: 10px 0; color: #e2e8f0;">
+        const aiBubble = document.createElement('div');
+        aiBubble.style.cssText = 'margin: 10px 0; width: 100%;';
+        aiBubble.innerHTML = `
+          <div style="background: #18181b; padding: 12px 16px; border-radius: 16px; display: inline-block; color: #e2e8f0; font-size: 14px; line-height: 1.5; max-width: 85%;">
             ${reply}
           </div>
         `;
+        chatContainer.appendChild(aiBubble);
+        chatContainer.scrollTop = chatContainer.scrollHeight;
       }
+
       if ('speechSynthesis' in window) {
         window.speechSynthesis.cancel();
         window.speechSynthesis.speak(new SpeechSynthesisUtterance(reply));
       }
     } catch (err) {
+      const indicator = document.getElementById('thinking-indicator');
+      if (indicator) indicator.remove();
       if (chatContainer) {
-        chatContainer.innerHTML += `<div class="ai-bubble" style="color:#ef4444">Error: ${err.message}</div>`;
+        chatContainer.innerHTML += `<div style="color: #ef4444; font-size: 13px; margin: 6px 0;">Error: ${err.message}</div>`;
       }
     }
   };
 
   if (sendButton && inputField) {
-    sendButton.addEventListener('click', (e) => { 
+    sendButton.onclick = (e) => { 
       e.preventDefault(); 
-      executeSend(inputField.value.trim()); 
+      executeSend(inputField.value); 
       inputField.value = ''; 
-    });
-    inputField.addEventListener('keydown', (e) => {
+    };
+    inputField.onkeydown = (e) => {
       if (e.key === 'Enter') {
         e.preventDefault();
-        executeSend(inputField.value.trim());
+        executeSend(inputField.value);
         inputField.value = '';
       }
-    });
+    };
   }
 
   // Type Drawer Toggle
@@ -272,8 +301,7 @@ function initJarvisApp() {
       overlay.id = 'full-screen-overlay';
       document.body.appendChild(overlay);
     }
-    // బాటమ్ ట్యాబ్స్ మరియు హెడర్ కనపడకుండా కంప్లీట్ స్క్రీన్‌ను కవర్ చేస్తుంది
-    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:99999; overflow-y:auto; padding:20px 16px; box-sizing:border-box; color:#fff;';
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:#030305; z-index:99999; overflow-y:auto; padding:20px 16px; box-sizing:border-box; color:#fff;';
     overlay.innerHTML = contentHtml;
 
     const backBtn = overlay.querySelector('.back-to-home');
@@ -364,7 +392,6 @@ function initJarvisApp() {
         if (overlay) overlay.remove();
       } 
       else if (index === 1) {
-        // Today Screen
         const html = `
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-top:10px;">
             <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
@@ -384,7 +411,6 @@ function initJarvisApp() {
         showFullScreenView(html);
       } 
       else if (index === 2) {
-        // Memory Screen
         const html = `
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-top:10px;">
             <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
@@ -400,7 +426,6 @@ function initJarvisApp() {
         showFullScreenView(html);
       } 
       else if (index === 3) {
-        // Files Screen
         const html = `
           <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-top:10px;">
             <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
@@ -418,6 +443,7 @@ function initJarvisApp() {
     });
   });
 }
+
 
 
 // ===== 5. 3D PARTICLE SPHERE & TOUCH MIC ANIMATION =====
