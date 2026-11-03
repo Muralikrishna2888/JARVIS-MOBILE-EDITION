@@ -171,7 +171,55 @@ function initJarvisApp() {
       const coreStage = document.getElementById('core-stage');
       const chatContainer = document.getElementById('chat');
       if (coreStage) coreStage.style.display = 'none';
-      
+
+        // Settings Button -> Full Screen Settings View
+  const settingsBtn = document.getElementById('settings-btn');
+  if (settingsBtn) {
+    settingsBtn.addEventListener('click', (e) => {
+      e.preventDefault();
+      const coreStage = document.getElementById('core-stage');
+      const chatContainer = document.getElementById('chat');
+      if (coreStage) coreStage.style.display = 'none';
+
+      if (chatContainer) {
+        chatContainer.innerHTML = `
+          <div class="history-view" style="padding: 16px; color: #fff; width: 100%; height: 100vh; overflow-y: auto; background: #000; position: absolute; top: 0; left: 0; z-index: 999;">
+            <div class="history-header" style="display: flex; align-items: center; justify-content: space-between; font-size: 20px; margin-bottom: 20px; padding-top: 10px;">
+              <span class="back-arrow" id="back-to-jarvis" style="cursor: pointer; font-size: 28px;">‹</span>
+              <h2>Settings</h2>
+              <span></span>
+            </div>
+            <div class="history-item" id="set-username" style="background: #18181b; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; cursor: pointer;">
+              <span>Username</span><span style="color: #888;">@${localStorage.getItem('userName') || 'eshwar'} ></span>
+            </div>
+            <div class="history-item" id="set-phone-assistant" style="background: #18181b; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; cursor: pointer;">
+              <span>Set as phone assistant</span><span style="color: #60a5fa;">Set up ></span>
+            </div>
+            <div class="history-item" id="set-api-key" style="background: #18181b; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; cursor: pointer;">
+              <span>Gemini API Key</span><span style="color: #888;">Update ></span>
+            </div>
+          </div>
+        `;
+        
+        document.getElementById('back-to-jarvis').addEventListener('click', () => location.reload());
+        
+        document.getElementById('set-username').addEventListener('click', () => {
+          const name = prompt("Enter your username:", localStorage.getItem('userName') || 'eshwar');
+          if(name) { localStorage.setItem('userName', name); settingsBtn.click(); }
+        });
+        
+        document.getElementById('set-phone-assistant').addEventListener('click', () => {
+          window.location.href = 'intent:#Intent;action=android.settings.VOICE_INPUT_SETTINGS;end';
+        });
+        
+        document.getElementById('set-api-key').addEventListener('click', () => {
+          const key = prompt("Enter new API Key:", localStorage.getItem('jarvis_key') || '');
+          if(key) { localStorage.setItem('jarvis_key', key); API_KEY = key; alert("API Key saved!"); }
+        });
+      }
+    });
+  }
+
       if (chatContainer) {
         chatContainer.innerHTML = `
           <div class="history-view" style="padding: 16px; color: #fff; width: 100%; height: 100vh; overflow-y: auto; background: #000; position: absolute; top: 0; left: 0; z-index: 999;">
