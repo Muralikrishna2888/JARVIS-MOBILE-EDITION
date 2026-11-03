@@ -59,15 +59,30 @@ async function requestGeminiInteraction(inputMessage) {
   const ai = new GoogleGenAI({ apiKey: API_KEY });
   MEMORY.push({ role: 'user', text: inputMessage });
   
-  const response = await ai.models.generateContent({
-    model: GEMINI_MODEL,
-    contents: MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
-  });
+  // ఆటోమేటిక్ గా 3 సార్లు ట్రై చేయడానికి లూప్
+  let attempts = 3;
+  let response = null;
+
+  while (attempts > 0) {
+    try {
+      response = await ai.models.generateContent({
+        model: GEMINI_MODEL,
+        contents: MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+      });
+      break; // సక్సెస్ అయితే లూప్ నుంచి బయటకు వస్తుంది
+    } catch (err) {
+      attempts--;
+      if (attempts === 0) throw err;
+      await new Promise(resolve => setTimeout(resolve, 2000)); // 2 సెకండ్లు ఆగి మళ్లీ ట్రై చేస్తుంది
+    }
+  }
+
   const reply = response?.text?.trim() || 'No response, Sir.';
   MEMORY.push({ role: 'model', text: reply });
   localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
   return reply;
 }
+
 
 // ===== 4. UI CONTROLS & FULL SCREEN VIEWS =====
 document.addEventListener('DOMContentLoaded', () => {
