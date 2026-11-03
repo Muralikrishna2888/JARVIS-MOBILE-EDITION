@@ -39,6 +39,16 @@ try {
 // ===== 2. DEVICE TOOLS =====
 async function handleTools(text) {
   const t = text.toLowerCase().trim();
+  
+// --- DEVICE TOOLS / REFLEX LAYER ---
+const DeviceTools = {
+  // మిగతా ٹూల్స్ (Alarm, Timer, etc.) ఇక్కడ ఉంటాయి...
+
+  // 1. Media Player Tool
+  playMedia: function(spokenText) {
+    routeMediaIntent(spokenText);
+  }
+};
 
   // Battery Check
   if (t.includes('battery') || t.includes('ఛార్జింగ్')) {
@@ -167,6 +177,67 @@ async function handleTools(text) {
       return `Setting a timer for ${val} ${unit}, Sir.`;
     }
   }
+// --- MEDIA ROUTING HANDLERS ---
+function routeMediaIntent(spokenText) {
+  const query = spokenText.toLowerCase().trim();
+
+  // Strip common trigger prefixes
+  const cleanTitle = query
+    .replace(/^(play|watch|show me|open)\s+/i, '')
+    .trim();
+
+  const videoKeywords = [
+    'trailer', 'teaser', 'video', 'movie', 'scene', 
+    'clip', 'episode', 'gameplay', 'short', 'highlight'
+  ];
+
+  const musicKeywords = [
+    'song', 'track', 'album', 'music', 'playlist', 'audio'
+  ];
+
+  const isVideo = videoKeywords.some(keyword => query.includes(keyword));
+  const isMusic = musicKeywords.some(keyword => query.includes(keyword));
+
+  if (isVideo) {
+    playOnYouTube(cleanTitle);
+  } else if (isMusic) {
+    playOnSpotify(cleanTitle);
+  } else {
+    // Default: Song అని చెప్పకపోతే YouTube కే వెళ్తుంది
+    playOnYouTube(cleanTitle);
+  }
+}
+
+function playOnYouTube(searchQuery) {
+  if (typeof speakNaturally === 'function') {
+    speakNaturally(`Playing ${searchQuery} on YouTube.`);
+  }
+  const encodedQuery = encodeURIComponent(searchQuery);
+  const intentUri = `intent://www.youtube.com/results?search_query=${encodedQuery}#Intent;scheme=https;package=com.google.android.youtube;end`;
+  const webFallbackUri = `https://www.youtube.com/results?search_query=${encodedQuery}`;
+  triggerAndroidOrWebIntent(intentUri, webFallbackUri);
+}
+
+function playOnSpotify(searchQuery) {
+  if (typeof speakNaturally === 'function') {
+    speakNaturally(`Playing ${searchQuery} on Spotify.`);
+  }
+  const encodedQuery = encodeURIComponent(searchQuery);
+  const spotifyUri = `spotify:search:${encodedQuery}`;
+  const webFallbackUri = `https://open.spotify.com/search/${encodedQuery}`;
+  triggerAndroidOrWebIntent(spotifyUri, webFallbackUri);
+}
+
+function triggerAndroidOrWebIntent(deepLink, webUrl) {
+  try {
+    window.location.href = deepLink;
+    setTimeout(() => {
+      window.open(webUrl, '_blank');
+    }, 500);
+  } catch (err) {
+    window.open(webUrl, '_blank');
+  }
+}
 
   return null;
 }
@@ -181,6 +252,13 @@ const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 async function requestGeminiInteraction(inputMessage) {
   if (!API_KEY) throw new Error('Gemini API key is missing.');
+  // మీడియా టూల్ చెక్ (Gemini API కి వెళ్లకుండా నేరుగా ప్లే అవుతుంది)
+  const lower = inputMessage.toLowerCase().trim();
+  if (lower.startsWith('play') || lower.startsWith('watch') || lower.startsWith('show me')) {
+    routeMediaIntent(inputMessage);
+    return;
+  }
+
   const toolResult = await handleTools(inputMessage);
   if (toolResult) return toolResult;
 
@@ -594,9 +672,28 @@ function initParticleSphere() {
     }
   });
 
-  coreMic.onresult = (event) => {
-    const voiceText = event.results[0][0].transcript.trim();
-    isCoreListening = false;
+coreMic.onresult = (event) => {
+  let transcript = '';
+  for (let i = event.resultIndex; i < event.results.length; ++i) {
+    transcript += event.results[i][0].transcript;
+  }
+  
+  const cleanText = transcript.trim();
+  const lower = cleanText.toLowerCase();
+
+  // ----------------------------------------------------
+  // 👉 సరిగ్గా ఇక్కడ పెట్టాలి (Reflex Check)
+  // ----------------------------------------------------
+  if (lower.startsWith('play') || lower.startsWith('watch') || lower.startsWith('show me')) {
+    routeMediaIntent(cleanText);
+    return; // ఇక్కడితో అయిపోతుంది, కింద ఉన్న Gemini API కి వెళ్లదు
+  }
+
+  // ----------------------------------------------------
+  // దీని కింద మిగతా Gemini API / Chat handling కోడ్ ఉంటుంది
+  // ----------------------------------------------------
+  sendToGemini(cleanText);
+};
     
     // Voice command ni execute cheyadaniki input field lo petti send kottadam
     const inputField = document.getElementById('msg');
