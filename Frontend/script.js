@@ -118,6 +118,13 @@ async function handleTools(text) {
     window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${app};end`;
     return `Launching ${app}, Sir.`;
   }
+  // Spotify Direct Song Launcher (API కోటా తగ్గించడానికి)
+  const musicMatch = t.match(/(?:play|ప్లే)\s+(.+?)(?:\s+(?:in|on|లో)\s+spotify)?$/i);
+  if (musicMatch && (t.includes('spotify') || t.includes('song') || t.includes('పాట') || t.includes('play'))) {
+    const query = encodeURIComponent(musicMatch[1].replace(/in spotify|on spotify/i, '').trim());
+    window.location.href = `spotify:search:${query}`;
+    return `Playing ${musicMatch[1]} on Spotify, Sir.`;
+  }
 
   return null;
 }
@@ -128,7 +135,7 @@ if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
-const GEMINI_MODEL = 'gemini-3.5-flash';
+const GEMINI_MODEL = 'gemini-2.5-flash-lite';
 
 async function requestGeminiInteraction(inputMessage) {
   if (!API_KEY) throw new Error('Gemini API key is missing.');
