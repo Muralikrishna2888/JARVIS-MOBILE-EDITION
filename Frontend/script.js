@@ -39,6 +39,8 @@ try {
 // ===== 2. DEVICE TOOLS =====
 async function handleTools(text) {
   const t = text.toLowerCase().trim();
+
+  // Battery Check
   if (t.includes('battery') || t.includes('ఛార్జింగ్')) {
     if ('getBattery' in navigator) {
       const b = await navigator.getBattery();
@@ -46,13 +48,77 @@ async function handleTools(text) {
     }
     return 'Battery info not available, Sir.';
   }
+
+  // Wi-Fi Settings
+  if (t.includes('wifi') || t.includes('వైఫై')) {
+    window.location.href = 'intent:#Intent;action=android.settings.WIFI_SETTINGS;end';
+    return 'Opening Wi-Fi settings, Sir.';
+  }
+
+  // Bluetooth Settings
+  if (t.includes('bluetooth') || t.includes('బ్లూటూత్')) {
+    window.location.href = 'intent:#Intent;action=android.settings.BLUETOOTH_SETTINGS;end';
+    return 'Opening Bluetooth settings, Sir.';
+  }
+
+  // Mobile Data / Network Settings
+  if (t.includes('data') || t.includes('డేటా') || t.includes('network') || t.includes('నెట్‌వర్క్')) {
+    window.location.href = 'intent:#Intent;action=android.settings.DATA_ROAMING_SETTINGS;end';
+    return 'Opening Mobile Data settings, Sir.';
+  }
+
+  // Hotspot / Tethering Settings
+  if (t.includes('hotspot') || t.includes('హాట్‌స్పాట్') || t.includes('tethering')) {
+    window.location.href = 'intent:#Intent;action=android.settings.TETHER_SETTINGS;end';
+    return 'Opening Hotspot settings, Sir.';
+  }
+
+  // Do Not Disturb (DND) / Sound Settings
+  if (t.includes('dnd') || t.includes('do not disturb') || t.includes('డిస్టర్బ్')) {
+    window.location.href = 'intent:#Intent;action=android.settings.ZEN_MODE_SETTINGS;end';
+    return 'Opening Do Not Disturb settings, Sir.';
+  }
+
+  // Torch / Flashlight (Browser Camera Stream dwara control)
+  if (t.includes('torch') || t.includes('flashlight') || t.includes('టార్చ్')) {
+    try {
+      if (t.includes('off') || t.includes('ఆఫ్')) {
+        if (window._torchTrack) {
+          window._torchTrack.stop();
+          window._torchTrack = null;
+          return 'Torch turned off, Sir.';
+        }
+        return 'Torch is already off, Sir.';
+      } else {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: { facingMode: 'environment' }
+        });
+        const track = stream.getVideoTracks()[0];
+        const capabilities = track.getCapabilities();
+        if (capabilities.torch) {
+          await track.applyConstraints({ advanced: [{ torch: true }] });
+          window._torchTrack = track;
+          return 'Torch turned on, Sir.';
+        } else {
+          window.location.href = 'intent:#Intent;action=android.settings.SETTINGS;end';
+          return 'Hardware torch toggle not supported on this browser engine, Sir.';
+        }
+      }
+    } catch (e) {
+      return 'Could not access torch directly, Sir.';
+    }
+  }
+
+  // App Launcher
   const appMatch = t.match(/(?:open|launch|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (appMatch) {
     const app = appMatch[1].trim().toLowerCase();
     if (app === 'youtube') { window.location.href = 'vnd.youtube:'; return 'Opening YouTube, Sir.'; }
+    if (app === 'spotify') { window.location.href = 'spotify:'; return 'Opening Spotify, Sir.'; }
     window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${app};end`;
     return `Launching ${app}, Sir.`;
   }
+
   return null;
 }
 
