@@ -129,6 +129,14 @@ body.jarvis-dark {
 /* BOTTOM TAB BAR */
 .bottom-tabs {
   display: none !important;
+  width: 100%;
+  justify-content: space-around;
+  border-top: 1px solid #111317;
+  padding-top: 8px;
+  padding-bottom: 6px;
+  background: #030305;
+  position: relative;
+  z-index: 10;
 }
 
 .type-pill-btn {
