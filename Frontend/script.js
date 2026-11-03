@@ -5,6 +5,20 @@ try {
   if (Array.isArray(storedMemory)) {
     MEMORY = storedMemory.filter(m => m && (m.role === 'user' || m.role === 'model') && typeof m.text === 'string');
   }
+  function saveToHistory(userText) {
+  if (!userText) return;
+  const newEntry = {
+    id: Date.now().toString(),
+    title: userText.length > 30 ? userText.substring(0, 30) + '...' : userText,
+    time: 'Just now · 1 turn',
+    category: 'TODAY'
+  };
+  
+  // Kotha chat ni list lo top ki add chesthundhi
+  CONVERSATIONS.unshift(newEntry);
+  localStorage.setItem(HISTORY_KEY, JSON.stringify(CONVERSATIONS));
+}
+
 } catch (e) {
   localStorage.removeItem('jarvis_memory');
 }
@@ -124,6 +138,9 @@ function initJarvisApp() {
   const executeSend = async (text) => {
     if (!text) return;
     
+    // History loki instant ga save chesthundhi
+    saveToHistory(text);
+
     if (coreStage) coreStage.classList.add('chat-active');
     if (greetingBox) greetingBox.style.display = 'none';
 
