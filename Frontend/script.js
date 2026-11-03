@@ -105,7 +105,6 @@ function initJarvisApp() {
   const executeSend = async (text) => {
     if (!text) return;
     
-    // టైప్ చేయగానే స్పియర్ పైకి వెళ్ళి చిన్నదవుతుంది (Screenshot 1000420949 లాగా)[span_5](start_span)[span_5](end_span)
     if (coreStage) coreStage.classList.add('chat-active');
     if (greetingBox) greetingBox.style.display = 'none';
 
@@ -142,7 +141,7 @@ function initJarvisApp() {
     sendButton.addEventListener('click', (e) => { 
       e.preventDefault(); 
       executeSend(inputField.value.trim()); 
-      inputField.value=''; 
+      inputField.value = ''; 
     });
     inputField.addEventListener('keydown', (e) => {
       if (e.key === 'Enter') {
@@ -163,146 +162,161 @@ function initJarvisApp() {
     });
   }
 
-   // Clock Button -> Full Screen History
+  // ఫుల్ స్క్రీన్ మోడల్ ఓపెన్ చేయడానికి యూనివర్సల్ హెల్పర్
+  const showFullScreenView = (contentHtml) => {
+    let overlay = document.getElementById('full-screen-overlay');
+    if (!overlay) {
+      overlay = document.createElement('div');
+      overlay.id = 'full-screen-overlay';
+      document.body.appendChild(overlay);
+    }
+    // బాటమ్ ట్యాబ్స్ మరియు హెడర్ కనపడకుండా కంప్లీట్ స్క్రీన్‌ను కవర్ చేస్తుంది
+    overlay.style.cssText = 'position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:99999; overflow-y:auto; padding:20px 16px; box-sizing:border-box; color:#fff;';
+    overlay.innerHTML = contentHtml;
+
+    const backBtn = overlay.querySelector('.back-to-home');
+    if (backBtn) {
+      backBtn.addEventListener('click', () => {
+        overlay.remove();
+      });
+    }
+  };
+
+  // 1. History View (Full Screen)
   if (historyToggle) {
     historyToggle.addEventListener('click', (e) => {
       e.preventDefault();
-      // హోమ్ స్క్రీన్ కంటెంట్ ని పూర్తిగా దాచడానికి
-      const coreStage = document.getElementById('core-stage');
-      const chatContainer = document.getElementById('chat');
-      if (coreStage) coreStage.style.display = 'none';
+      const html = `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-top:10px;">
+          <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
+          <h2 style="font-size:22px; margin:0; font-weight:600;">History</h2>
+          <span style="font-size:18px;">🔍</span>
+        </div>
+        <div style="font-size:11px; color:#71717a; font-weight:bold; letter-spacing:1px; margin-bottom:12px;">TODAY</div>
+        ${CONVERSATIONS.filter(c => c.category === 'TODAY').map(c => `
+          <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:10px;">
+            <div style="font-weight:500; font-size:15px;">${c.title}</div>
+            <div style="font-size:12px; color:#71717a; margin-top:4px;">${c.time}</div>
+          </div>
+        `).join('')}
+        
+        <div style="font-size:11px; color:#71717a; font-weight:bold; letter-spacing:1px; margin:24px 0 12px 0;">THIS WEEK</div>
+        ${CONVERSATIONS.filter(c => c.category === 'THIS WEEK').map(c => `
+          <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:10px;">
+            <div style="font-weight:500; font-size:15px;">${c.title}</div>
+            <div style="font-size:12px; color:#71717a; margin-top:4px;">${c.time}</div>
+          </div>
+        `).join('')}
+      `;
+      showFullScreenView(html);
+    });
+  }
 
-        // Settings Button -> Full Screen Settings View
-  const settingsBtn = document.getElementById('settings-btn');
+  // 2. Settings View (Full Screen)
   if (settingsBtn) {
     settingsBtn.addEventListener('click', (e) => {
       e.preventDefault();
-      const coreStage = document.getElementById('core-stage');
-      const chatContainer = document.getElementById('chat');
-      if (coreStage) coreStage.style.display = 'none';
+      const html = `
+        <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-top:10px;">
+          <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
+          <h2 style="font-size:22px; margin:0; font-weight:600;">Settings</h2>
+          <span></span>
+        </div>
+        <div id="set-username" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
+          <span>Username</span>
+          <span style="color:#888;">@${localStorage.getItem('userName') || 'eshwar'} &gt;</span>
+        </div>
+        <div id="set-phone-assistant" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
+          <span>Set as phone assistant</span>
+          <span style="color:#60a5fa;">Set up &gt;</span>
+        </div>
+        <div id="set-api-key" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
+          <span>Gemini API Key</span>
+          <span style="color:#888;">Update &gt;</span>
+        </div>
+      `;
+      showFullScreenView(html);
 
-      if (chatContainer) {
-        chatContainer.innerHTML = `
-          <div class="history-view" style="padding: 16px; color: #fff; width: 100%; height: 100vh; overflow-y: auto; background: #000; position: absolute; top: 0; left: 0; z-index: 999;">
-            <div class="history-header" style="display: flex; align-items: center; justify-content: space-between; font-size: 20px; margin-bottom: 20px; padding-top: 10px;">
-              <span class="back-arrow" id="back-to-jarvis" style="cursor: pointer; font-size: 28px;">‹</span>
-              <h2>Settings</h2>
-              <span></span>
-            </div>
-            <div class="history-item" id="set-username" style="background: #18181b; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; cursor: pointer;">
-              <span>Username</span><span style="color: #888;">@${localStorage.getItem('userName') || 'eshwar'} ></span>
-            </div>
-            <div class="history-item" id="set-phone-assistant" style="background: #18181b; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; cursor: pointer;">
-              <span>Set as phone assistant</span><span style="color: #60a5fa;">Set up ></span>
-            </div>
-            <div class="history-item" id="set-api-key" style="background: #18181b; padding: 16px; border-radius: 12px; margin-bottom: 12px; display: flex; justify-content: space-between; cursor: pointer;">
-              <span>Gemini API Key</span><span style="color: #888;">Update ></span>
-            </div>
-          </div>
-        `;
-        
-        document.getElementById('back-to-jarvis').addEventListener('click', () => location.reload());
-        
-        document.getElementById('set-username').addEventListener('click', () => {
-          const name = prompt("Enter your username:", localStorage.getItem('userName') || 'eshwar');
-          if(name) { localStorage.setItem('userName', name); settingsBtn.click(); }
-        });
-        
-        document.getElementById('set-phone-assistant').addEventListener('click', () => {
-          window.location.href = 'intent:#Intent;action=android.settings.VOICE_INPUT_SETTINGS;end';
-        });
-        
-        document.getElementById('set-api-key').addEventListener('click', () => {
-          const key = prompt("Enter new API Key:", localStorage.getItem('jarvis_key') || '');
-          if(key) { localStorage.setItem('jarvis_key', key); API_KEY = key; alert("API Key saved!"); }
-        });
-      }
+      document.getElementById('set-username')?.addEventListener('click', () => {
+        const name = prompt("Enter your username:", localStorage.getItem('userName') || 'eshwar');
+        if (name) { localStorage.setItem('userName', name); settingsBtn.click(); }
+      });
+      document.getElementById('set-phone-assistant')?.addEventListener('click', () => {
+        window.location.href = 'intent:#Intent;action=android.settings.VOICE_INPUT_SETTINGS;end';
+      });
+      document.getElementById('set-api-key')?.addEventListener('click', () => {
+        const key = prompt("Enter new API Key:", localStorage.getItem('jarvis_key') || '');
+        if (key) { localStorage.setItem('jarvis_key', key); API_KEY = key; alert("API Key saved!"); }
+      });
     });
   }
 
-      if (chatContainer) {
-        chatContainer.innerHTML = `
-          <div class="history-view" style="padding: 16px; color: #fff; width: 100%; height: 100vh; overflow-y: auto; background: #000; position: absolute; top: 0; left: 0; z-index: 999;">
-            <div class="history-header" style="display: flex; align-items: center; justify-content: space-between; font-size: 20px; margin-bottom: 20px; padding-top: 10px;">
-              <span class="back-arrow" id="back-to-jarvis" style="cursor: pointer; font-size: 28px;">‹</span>
-              <h2>History</h2>
-              <span>🔍</span>
-            </div>
-            <div class="h-section" style="font-size: 11px; color: #71717a; font-weight: bold; margin: 12px 0;">TODAY</div>
-            ${CONVERSATIONS.filter(c => c.category === 'TODAY').map(c => `<div class="history-item" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;"><div style="font-weight: 500; font-size: 15px;">${c.title}</div><div style="font-size: 11px; color: #71717a; margin-top: 4px;">${c.time}</div></div>`).join('')}
-            
-            <div class="h-section" style="font-size: 11px; color: #71717a; font-weight: bold; margin: 20px 0 12px 0;">THIS WEEK</div>
-            ${CONVERSATIONS.filter(c => c.category === 'THIS WEEK').map(c => `<div class="history-item" style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;"><div style="font-weight: 500; font-size: 15px;">${c.title}</div><div style="font-size: 11px; color: #71717a; margin-top: 4px;">${c.time}</div></div>`).join('')}
-          </div>
-        `;
-        document.getElementById('back-to-jarvis').addEventListener('click', () => location.reload());
-      }
-    });
-  }
-  
-  // Bottom Tabs -> Full Screen Views (Today, Memory, Files)[span_8](start_span)[span_8](end_span)[span_9](start_span)[span_9](end_span)[span_10](start_span)[span_10](end_span)
+  // 3. Bottom Tabs -> Full Screen Views
   bottomTabs.forEach((tab, index) => {
     tab.addEventListener('click', () => {
       bottomTabs.forEach(t => t.classList.remove('active'));
       tab.classList.add('active');
-      if (index === 0) location.reload();
-      else if (index === 1 && chatContainer) {
-        // Today Screen (Screenshot 1000420950)[span_11](start_span)[span_11](end_span)
-        chatContainer.innerHTML = `
-          <div class="today-dashboard" style="padding: 16px; color: #fff; height: 100%; overflow-y: auto;">
-            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px;">
-              <h2>Sat, 31 Oct</h2>
-              <button style="background: #2563eb; color: #fff; border: none; padding: 6px 16px; border-radius: 20px;">Brief me</button>
-            </div>
-            <div style="font-size: 11px; color: #71717a; margin-bottom: 10px; font-weight: bold;">NO DATE YET</div>
-            <div style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;">
-              <div style="font-weight: 500; margin-bottom: 8px;">building a Jarvis to control the phone</div>
-              <div style="font-size: 12px; color: #71717a; display: flex; justify-content: space-between;"><span>you owe · open 26d</span><span style="color:#22c55e;">✓ Done</span></div>
-            </div>
-            <div style="background: #18181b; padding: 14px; border-radius: 12px;">
-              <div style="font-weight: 500; margin-bottom: 8px;">writing biology workbook procedure</div>
-              <div style="font-size: 12px; color: #71717a; display: flex; justify-content: space-between;"><span>you owe · open 3d</span><span style="color:#22c55e;">✓ Done</span></div>
-            </div>
+
+      if (index === 0) {
+        const overlay = document.getElementById('full-screen-overlay');
+        if (overlay) overlay.remove();
+      } 
+      else if (index === 1) {
+        // Today Screen
+        const html = `
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-top:10px;">
+            <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
+            <h2 style="font-size:22px; margin:0; font-weight:600;">Sat, 31 Oct</h2>
+            <button style="background:#2563eb; color:#fff; border:none; padding:8px 18px; border-radius:20px; font-weight:500;">Brief me</button>
+          </div>
+          <div style="font-size:11px; color:#71717a; margin-bottom:12px; font-weight:bold; letter-spacing:1px;">NO DATE YET</div>
+          <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px;">
+            <div style="font-weight:500; font-size:15px; margin-bottom:10px;">building a Jarvis to control the phone</div>
+            <div style="font-size:12px; color:#71717a; display:flex; justify-content:space-between;"><span>you owe · open 26d</span><span style="color:#22c55e; font-weight:500;">✓ Done</span></div>
+          </div>
+          <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px;">
+            <div style="font-weight:500; font-size:15px; margin-bottom:10px;">writing biology workbook procedure</div>
+            <div style="font-size:12px; color:#71717a; display:flex; justify-content:space-between;"><span>you owe · open 3d</span><span style="color:#22c55e; font-weight:500;">✓ Done</span></div>
           </div>
         `;
-      }
-      else if (index === 2 && chatContainer) {
-        // Memory Screen (Screenshot 1000420951)[span_12](start_span)[span_12](end_span)
-        chatContainer.innerHTML = `
-          <div class="memory-view" style="padding: 16px; color: #fff; height: 100%; overflow-y: auto;">
-            <h2 style="margin-bottom: 16px;">Memory</h2>
-            <input class="memory-search" placeholder="Search what Jarvis knows..." style="width: 100%; background: #18181b; border: 1px solid #27272a; padding: 12px; border-radius: 12px; color: #fff; margin-bottom: 16px;">
-            <div style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;">
-              <div style="font-size: 11px; color: #888; display: flex; justify-content: space-between; margin-bottom: 4px;"><span>You</span><span style="color:#60a5fa;">NEW</span></div>
-              <div>Your name is Ishwar.</div>
-            </div>
-            <div style="background: #18181b; padding: 14px; border-radius: 12px;">
-              <div style="font-size: 11px; color: #888; display: flex; justify-content: space-between; margin-bottom: 4px;"><span>You</span></div>
-              <div>You stated their name is Yashwant.</div>
-            </div>
+        showFullScreenView(html);
+      } 
+      else if (index === 2) {
+        // Memory Screen
+        const html = `
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-top:10px;">
+            <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
+            <h2 style="font-size:22px; margin:0; font-weight:600;">Memory</h2>
+            <span></span>
+          </div>
+          <input placeholder="Search what Jarvis knows..." style="width:100%; box-sizing:border-box; background:#18181b; border:1px solid #27272a; padding:14px; border-radius:14px; color:#fff; margin-bottom:16px; font-size:14px;">
+          <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px;">
+            <div style="font-size:11px; color:#888; display:flex; justify-content:space-between; margin-bottom:6px;"><span>You</span><span style="color:#60a5fa; font-weight:bold;">NEW</span></div>
+            <div style="font-size:15px; font-weight:500;">Your name is Ishwar.</div>
           </div>
         `;
-      }
-      else if (index === 3 && chatContainer) {
-        // Files Screen (Screenshot 1000420952)[span_13](start_span)[span_13](end_span)
-        chatContainer.innerHTML = `
-          <div class="files-view" style="padding: 16px; color: #fff; height: 100%; overflow-y: auto;">
-            <h2 style="margin-bottom: 16px;">Files</h2>
-            <input class="memory-search" placeholder="Search your files..." style="width: 100%; background: #18181b; border: 1px solid #27272a; padding: 12px; border-radius: 12px; color: #fff; margin-bottom: 16px;">
-            <div style="background: #18181b; padding: 14px; border-radius: 12px; margin-bottom: 10px;">
-              <h3 style="font-size: 15px; margin-bottom: 4px;">Eshwar's Photo</h3>
-              <p style="font-size: 12px; color: #888;">![User photo](content://media/external/images/media/123)</p>
-            </div>
-            <div style="background: #18181b; padding: 14px; border-radius: 12px;">
-              <h3 style="font-size: 15px; margin-bottom: 4px;">బయాలజీ వర్క్ బుక్ - లాక్టోబాసిల్లస్ ప్రొసీజర్</h3>
-              <p style="font-size: 12px; color: #888;">Buttermilk</p>
-            </div>
+        showFullScreenView(html);
+      } 
+      else if (index === 3) {
+        // Files Screen
+        const html = `
+          <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:20px; padding-top:10px;">
+            <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
+            <h2 style="font-size:22px; margin:0; font-weight:600;">Files</h2>
+            <span></span>
+          </div>
+          <input placeholder="Search your files..." style="width:100%; box-sizing:border-box; background:#18181b; border:1px solid #27272a; padding:14px; border-radius:14px; color:#fff; margin-bottom:16px; font-size:14px;">
+          <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px;">
+            <h3 style="font-size:15px; margin:0 0 6px 0;">Eshwar's Photo</h3>
+            <p style="font-size:12px; color:#888; margin:0;">![User photo](content://media/external/images/media/123)</p>
           </div>
         `;
+        showFullScreenView(html);
       }
     });
   });
 }
+
 
 // ===== 5. 3D PARTICLE SPHERE & TOUCH MIC ANIMATION =====
 let isCoreListening = false;
