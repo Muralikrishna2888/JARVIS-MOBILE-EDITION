@@ -62,8 +62,7 @@ body.jarvis-dark {
   flex: 1;
   width: 100%;
   position: relative;
-  padding: 0 20px;
-  gap: 12px; /* స్పియర్ మరియు టెక్స్ట్ మధ్య సరైన గ్యాప్ ఉంచడానికి */
+  min-height: 260px;
 }
 
 .sphere-wrapper {
@@ -79,8 +78,10 @@ body.jarvis-dark {
 #particle-sphere {
   width: 240px !important;
   height: 240px !important;
-  display: block;
+  display: block !important;
 }
+
+
 
 .greeting-box {
   text-align: center;
