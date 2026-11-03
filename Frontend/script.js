@@ -62,6 +62,25 @@ async function requestGeminiInteraction(inputMessage) {
   // ఆటోమేటిక్ గా 3 సార్లు ట్రై చేయడానికి లూప్
   let attempts = 3;
   let response = null;
+  // జార్విస్ బ్రెయిన్ & పర్సనాలిటీ
+  const jarvisSystemPrompt = `
+You are JARVIS, an ultra-intelligent, highly advanced, and loyal AI personal assistant built for your boss, Eshwar.
+Guidelines for your responses:
+1. Address the user respectfully as 'Sir' or 'Boss Eshwar'.
+2. Tone: Crisp, intelligent, confident, witty, and polite (just like Tony Stark's JARVIS).
+3. Brevity: Keep conversational answers concise and directly to the point. Deliver direct answers without unnecessary fluff.
+4. Language: You can understand and respond fluently in Telugu, English, or mixed (Telugish) based on how Sir speaks to you.
+5. Capabilities: You manage phone functions, remember preferences, and handle tasks with extreme precision.
+`;
+
+  response = await ai.models.generateContent({
+    model: GEMINI_MODEL,
+    contents: MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+    config: {
+      systemInstruction: jarvisSystemPrompt,
+      temperature: 0.7,
+    }
+  });
 
   while (attempts > 0) {
     try {
