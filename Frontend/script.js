@@ -125,6 +125,48 @@ async function handleTools(text) {
     window.location.href = `spotify:search:${query}`;
     return `Playing ${musicMatch[1]} on Spotify, Sir.`;
   }
+  // ===== 1. ALARM SETTER TOOL =====
+  if (t.includes('alarm') || t.includes('అలారం')) {
+    // 6:30, 07:00 లేదా 6 am / pm సమయాలను గుర్తించే లాజిక్
+    const timeMatch = t.match(/(\d{1,2})(?::(\d{2}))?\s*(am|pm)?/i);
+    
+    if (timeMatch) {
+      let hour = parseInt(timeMatch[1], 10);
+      const minutes = timeMatch[2] ? parseInt(timeMatch[2], 10) : 0;
+      const period = timeMatch[3] ? timeMatch[3].toLowerCase() : null;
+
+      // AM / PM ప్రకారం 24-గంటల ఫార్మాట్‌కి మార్చడం
+      if (period === 'pm' && hour < 12) hour += 12;
+      if (period === 'am' && hour === 12) hour = 0;
+
+      // Android Clock Intent ఫైర్ చేయడం
+      const intentUrl = `intent:#Intent;action=android.intent.action.SET_ALARM;i.android.intent.extra.alarm.HOUR=${hour};i.android.intent.extra.alarm.MINUTES=${minutes};s.android.intent.extra.alarm.MESSAGE=Jarvis%20Alarm;b.android.intent.extra.alarm.SKIP_UI=false;end`;
+      
+      window.location.href = intentUrl;
+      return `Setting an alarm for ${hour}:${minutes < 10 ? '0' + minutes : minutes}, Sir.`;
+    } else {
+      // సమయం చెప్పకపోతే క్లాక్ యాప్‌ను నేరుగా ఓపెన్ చేస్తుంది
+      window.location.href = 'intent:#Intent;action=android.intent.action.SHOW_ALARMS;end';
+      return 'Opening your Alarms, Sir.';
+    }
+  }
+
+  // ===== 2. TIMER SETTER TOOL =====
+  if (t.includes('timer') || t.includes('టైమర్')) {
+    // 5 minutes, 10 seconds వంటి సమయాలను గుర్తించడం
+    const timerMatch = t.match(/(\d+)\s*(minute|min|sec|second|సెకను|నిమిషం)/i);
+    
+    if (timerMatch) {
+      const val = parseInt(timerMatch[1], 10);
+      const unit = timerMatch[2].toLowerCase();
+      const lengthInSeconds = (unit.includes('min') || unit.includes('నిమిషం')) ? val * 60 : val;
+
+      const timerIntent = `intent:#Intent;action=android.intent.action.SET_TIMER;i.android.intent.extra.alarm.LENGTH=${lengthInSeconds};s.android.intent.extra.alarm.MESSAGE=Jarvis%20Timer;b.android.intent.extra.alarm.SKIP_UI=false;end`;
+      
+      window.location.href = timerIntent;
+      return `Setting a timer for ${val} ${unit}, Sir.`;
+    }
+  }
 
   return null;
 }
@@ -565,6 +607,49 @@ function initParticleSphere() {
     }
   };
 
-  coreMic.onerror = () => { isCoreListening = false; };
+    coreMic.onerror = () => { isCoreListening = false; };
   coreMic.onend = () => { isCoreListening = false; };
+}
+
+// టెక్స్ట్‌లోని మార్క్‌డౌన్ సింబల్స్, ఎమోజీలను తొలగించే ఫంక్షన్
+function cleanTextForSpeech(text) {
+  if (!text) return '';
+  return text
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/gu, '')
+    .replace(/[*#_`~>\[\]()]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// సహజమైన గూగుల్ వాయిస్‌తో మాట్లాడే ఫంక్షన్
+function speakNaturally(textToSpeak) {
+  if (!('speechSynthesis' in window)) return;
+
+  const cleanText = cleanTextForSpeech(textToSpeak);
+  if (!cleanText) return;
+
+  window.speechSynthesis.cancel();
+
+  const utterance = new SpeechSynthesisUtterance(cleanText);
+  utterance.rate = 1.0;
+  utterance.pitch = 1.0;
+
+  const voices = window.speechSynthesis.getVoices();
+  const naturalVoice = voices.find(v => 
+    (v.name.includes('Google') || v.name.includes('Natural')) && 
+    (v.lang.startsWith('en') || v.lang.startsWith('te'))
+  ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+
+  if (naturalVoice) {
+    utterance.voice = naturalVoice;
+  }
+
+  window.speechSynthesis.speak(utterance);
+}
+
+// వాయిస్‌లు లోడ్ అవ్వడానికి లిజనర్
+if ('speechSynthesis' in window) {
+  window.speechSynthesis.onvoiceschanged = () => {
+    window.speechSynthesis.getVoices();
+  };
 }
