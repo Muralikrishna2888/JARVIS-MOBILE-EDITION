@@ -135,7 +135,7 @@ if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
-const GEMINI_MODEL = 'gemini-2.5-flash-lite';
+const GEMINI_MODEL = 'gemini-3.5-flash-lite';
 
 async function requestGeminiInteraction(inputMessage) {
   if (!API_KEY) throw new Error('Gemini API key is missing.');
