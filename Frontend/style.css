@@ -328,3 +328,108 @@ body.jarvis-dark {
   box-sizing: border-box;
 }
 
+/* Bottom Control Buttons Container */
+.bottom-action-bar {
+  position: fixed;
+  bottom: 28px;
+  left: 0;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 36px;
+  z-index: 100;
+}
+
+/* Base Circular Button */
+.circle-btn {
+  border: none;
+  border-radius: 50%;
+  outline: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: transform 0.15s ease, background-color 0.2s ease;
+}
+
+.circle-btn:active {
+  transform: scale(0.92);
+}
+
+/* Small dark buttons for 'x' and '+' */
+.small-btn {
+  width: 52px;
+  height: 52px;
+  background: #181920;
+  color: #a1a1aa;
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* Center Blue Mic Button */
+.mic-btn {
+  width: 72px;
+  height: 72px;
+  background: #2563eb;
+  color: #ffffff;
+  box-shadow: 0 4px 18px rgba(37, 99, 235, 0.45);
+}
+
+/* Backdrop Dimming */
+.sheet-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  background: rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 0.25s ease;
+  z-index: 200;
+}
+
+.sheet-backdrop.active {
+  opacity: 1;
+  visibility: visible;
+}
+
+/* Sliding Bottom Sheet */
+.action-sheet {
+  position: fixed;
+  bottom: -320px;
+  left: 0;
+  width: 100%;
+  background: #121318;
+  border-top-left-radius: 20px;
+  border-top-right-radius: 20px;
+  padding: 12px 20px calc(24px + env(safe-area-inset-bottom, 0px)) 20px;
+  box-sizing: border-box;
+  z-index: 210;
+  transition: bottom 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  box-shadow: 0 -8px 24px rgba(0, 0, 0, 0.6);
+}
+
+.action-sheet.active {
+  bottom: 0;
+}
+
+/* Menu Items */
+.action-item {
+  padding: 18px 4px;
+  font-size: 17px;
+  font-weight: 500;
+  color: #f4f4f5;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: color 0.15s ease;
+}
+
+.action-item:last-child {
+  border-bottom: none;
+}
+
+.action-item:active {
+  color: #60a5fa;
+}
