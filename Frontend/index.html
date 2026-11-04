@@ -75,6 +75,39 @@
 </script>
 
   <script type="module" src="script.js?v=2"></script>
+  
+    <!-- Main Action Controls (Bottom) -->
+  <div class="bottom-action-bar">
+    <button id="close-btn" class="circle-btn small-btn">✕</button>
+
+    <button id="mic-main-btn" class="circle-btn mic-btn">
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2a3 3 0 0 0-3 3v7a3 3 0 0 0 6 0V5a3 3 0 0 0-3-3Z"></path>
+        <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+        <line x1="12" x2="12" y1="19" y2="22"></line>
+      </svg>
+    </button>
+
+    <button id="plus-menu-btn" class="circle-btn small-btn">+</button>
+  </div>
+
+  <!-- Backdrop Overlay -->
+  <div id="action-sheet-backdrop" class="sheet-backdrop"></div>
+
+  <!-- Bottom Sheet Menu -->
+  <div id="action-sheet-menu" class="action-sheet">
+    <div class="action-item" id="act-take-photo">Take photo</div>
+    <div class="action-item" id="act-photo-library">Photo library</div>
+    <div class="action-item" id="act-file">File</div>
+    <div class="action-item" id="act-live-camera">Live camera</div>
+  </div>
+
+  <!-- Hidden Native Inputs -->
+  <input type="file" id="camera-input" accept="image/*" capture="environment" style="display: none;">
+  <input type="file" id="gallery-input" accept="image/*" style="display: none;">
+  <input type="file" id="file-input" style="display: none;">
+</body>
+
 </body>
 </html>
 
