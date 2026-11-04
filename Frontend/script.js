@@ -405,6 +405,7 @@ function initJarvisApp() {
     });
   }
 
+  // 2. Settings View (Full Screen)
   if (settingsBtn) {
     settingsBtn.addEventListener('click', (e) => {
       e.preventDefault();
@@ -418,6 +419,11 @@ function initJarvisApp() {
           <span>Username</span>
           <span style="color:#888;">@${localStorage.getItem('userName') || 'eshwar'} &gt;</span>
         </div>
+        <!-- 👉 మిస్ అయిన 'Set as phone assistant' ఆప్షన్ -->
+        <div id="set-phone-assistant" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
+          <span>Set as phone assistant</span>
+          <span style="color:#60a5fa;">Set up &gt;</span>
+        </div>
         <div id="set-api-key" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
           <span>Gemini API Key</span>
           <span style="color:#888;">Update &gt;</span>
@@ -429,12 +435,19 @@ function initJarvisApp() {
         const name = prompt("Enter your username:", localStorage.getItem('userName') || 'eshwar');
         if (name) { localStorage.setItem('userName', name); settingsBtn.click(); }
       });
+
+      // 👉 Phone Assistant Settings ఓపెన్ చేయడానికి లిజనర్
+      document.getElementById('set-phone-assistant')?.addEventListener('click', () => {
+        window.location.href = 'intent:#Intent;action=android.settings.VOICE_INPUT_SETTINGS;end';
+      });
+
       document.getElementById('set-api-key')?.addEventListener('click', () => {
         const key = prompt("Enter new API Key:", localStorage.getItem('jarvis_key') || '');
         if (key) { localStorage.setItem('jarvis_key', key); API_KEY = key; alert("API Key saved!"); }
       });
     });
   }
+
 
   bottomTabs.forEach((tab, index) => {
     tab.addEventListener('click', () => {
