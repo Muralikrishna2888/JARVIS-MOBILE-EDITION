@@ -200,40 +200,78 @@ function triggerAndroidOrWebIntent(deepLink, webUrl) {
   }
 }
 
-// ===== 3. GEMINI SETUP =====
+// ===== 3. GEMINI SETUP WITH PERSISTENT USER FACTS =====
 let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
-const GEMINI_MODEL = 'gemini-3.5-flash-lite';
+const GEMINI_MODEL = 'gemini-1.5-flash';
 
-async function requestGeminiInteraction(inputMessage) {
+// 1. యూజర్ ప్రత్యేకంగా గుర్తుంచుకోమన్న వివరాల మెమరీ
+let USER_FACTS = [];
+try {
+  USER_FACTS = JSON.parse(localStorage.getItem('jarvis_user_facts') || '[]');
+} catch (e) {
+  USER_FACTS = [];
+}
+
+async function requestGeminiInteraction(inputMessage, base64Image = null) {
   if (!API_KEY) throw new Error('Gemini API key is missing.');
 
-  // Reflex Check: మీడియా డైరెక్ట్ రూటింగ్
-  const lower = inputMessage.toLowerCase().trim();
+  // మీడియా డైరెక్ట్ రూటింగ్ చెక్
+  const lower = (inputMessage || '').toLowerCase().trim();
   if (lower.startsWith('play') || lower.startsWith('watch') || lower.startsWith('show me')) {
-    routeMediaIntent(inputMessage);
-    return 'Opening media player, Sir.';
+    if (typeof routeMediaIntent === 'function') {
+      routeMediaIntent(inputMessage);
+      return 'Opening media player, Sir.';
+    }
   }
 
   // Device Tools Check
-  const toolResult = await handleTools(inputMessage);
-  if (toolResult) return toolResult;
+  if (typeof handleTools === 'function') {
+    const toolResult = await handleTools(inputMessage);
+    if (toolResult) return toolResult;
+  }
 
   const { GoogleGenAI } = await import('https://esm.run/@google/genai');
   const ai = new GoogleGenAI({ apiKey: API_KEY });
-  MEMORY.push({ role: 'user', text: inputMessage });
-  
+
+  // ఇన్పుట్ డేటా సిద్ధం చేయడం
+  const currentParts = [];
+  if (base64Image) {
+    const mimeType = base64Image.split(';')[0].split(':')[1] || 'image/jpeg';
+    const rawBase64 = base64Image.split(',')[1] || base64Image;
+    currentParts.push({
+      inlineData: { mimeType: mimeType, data: rawBase64 }
+    });
+  }
+  if (inputMessage) {
+    currentParts.push({ text: inputMessage });
+  }
+
+  MEMORY.push({ role: 'user', parts: currentParts });
+
+  // 2. ఇప్పటివరకు గుర్తుపెట్టుకున్న ఫ్యాక్ట్స్ సిస్టమ్ ప్రాంప్ట్ లోకి చేర్చడం
+  const factsString = USER_FACTS.length > 0 
+    ? USER_FACTS.map((f, i) => `${i + 1}. ${f}`).join('\n') 
+    : 'No explicit facts recorded yet.';
+
   const jarvisSystemPrompt = `
 You are JARVIS, an ultra-intelligent, highly advanced, and loyal AI personal assistant built for your boss, Eshwar.
-Guidelines for your responses:
+
+IMPORTANT - USER MEMORY & RULES TO ALWAYS REMEMBER:
+${factsString}
+
+Instructions:
 1. Address the user respectfully as 'Sir' or 'Eshwar'.
-2. Tone: Crisp, intelligent, confident, witty, and polite.
-3. Brevity: Keep conversational answers concise and directly to the point.
-4. Language: Respond fluently in Telugu, English, or Telugish matching Sir's language.
-5. Capabilities: You manage phone functions, remember preferences, and handle tasks with extreme precision.
+2. Always keep the above USER MEMORY in mind and reflect these preferences consistently in every response without being reminded.
+3. If Sir explicitly shares a new rule, fact, personal detail, or says "remember this", write your conversational response first, and at the VERY END of your response append:
+   [[MEMORY_STORE: exact brief fact or rule to remember]]
+   (Do not mention this tag in your spoken voice).
+4. Do not repeat facts unnecessarily; simply follow them naturally.
+5. Tone: Crisp, intelligent, confident, witty, and polite.
+6. Language: Respond fluently in Telugu, English, or Telugish matching Sir's language.
 `;
 
   let attempts = 3;
@@ -243,7 +281,10 @@ Guidelines for your responses:
     try {
       response = await ai.models.generateContent({
         model: GEMINI_MODEL,
-        contents: MEMORY.map(m => ({ role: m.role, parts: [{ text: m.text }] })),
+        contents: MEMORY.map(m => ({
+          role: m.role,
+          parts: m.parts || [{ text: m.text || '' }]
+        })),
         config: {
           systemInstruction: jarvisSystemPrompt,
           temperature: 0.7,
@@ -257,14 +298,48 @@ Guidelines for your responses:
     }
   }
 
-  const reply = response?.text?.trim() || 'No response, Sir.';
-  MEMORY.push({ role: 'model', text: reply });
-  localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+  let reply = response?.text?.trim() || 'No response, Sir.';
+
+  // 3. AI కొత్త విషయాన్ని గుర్తుపెట్టుకోవాలని ట్యాగ్ పంపితే దాన్ని నోట్ చేసుకోవడం
+  const memoryMatch = reply.match(/\[\[MEMORY_STORE:\s*(.*?)\]\]/);
+  if (memoryMatch) {
+    const newFact = memoryMatch[1].trim();
+    if (newFact && !USER_FACTS.includes(newFact)) {
+      USER_FACTS.push(newFact);
+      localStorage.setItem('jarvis_user_facts', JSON.stringify(USER_FACTS));
+    }
+    // యూజర్‌కి కనిపించే లేదా వాయిస్‌లో చదివే టెక్స్ట్ నుండి ఆ ట్యాగ్‌ను తొలగించడం
+    reply = reply.replace(/\[\[MEMORY_STORE:\s*.*?\]\]/g, '').trim();
+  }
+
+  // మోడల్ సమాధానాన్ని మెమరీలో భద్రపరచడం
+  MEMORY.push({ role: 'model', parts: [{ text: reply }] });
+  try {
+    localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+  } catch (e) {
+    console.error("Memory save failed:", e);
+  }
+
   return reply;
 }
 
-// Global reference for execution
-let triggerJarvisSend = null;
+// గ్లోబల్ ఎగ్జిక్యూషన్ ఫంక్షన్
+triggerJarvisSend = async function(text, base64Image = null) {
+  if (typeof saveToHistory === 'function' && text) {
+    saveToHistory(text);
+  }
+  try {
+    const botReply = await requestGeminiInteraction(text, base64Image);
+    if (typeof appendMessage === 'function') {
+      appendMessage('bot', botReply);
+    }
+    if (typeof speakNaturally === 'function') {
+      speakNaturally(botReply);
+    }
+  } catch (err) {
+    console.error("Jarvis Execution Error:", err);
+  }
+};
 
 // ===== 4. UI CONTROLS & FULL SCREEN VIEWS =====
 document.addEventListener('DOMContentLoaded', () => {
