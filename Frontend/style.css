@@ -436,60 +436,64 @@ body.jarvis-dark {
 action-menu-container{display:flex;justifycontent:center;aligntems:center;}
 
 /* Orbit Menu Container */
+/* యాక్షన్ మెనూ కంటైనర్ - డీఫాల్ట్‌గా దాచి ఉంచడం */
 .action-menu-container {
-  position: relative;
-  display: flex;
+  position: fixed;
+  bottom: 25px;
+  left: 50%;
+  transform: translateX(-50%);
+  display: none; /* డీఫాల్ట్‌గా కనిపించదు */
   justify-content: center;
   align-items: center;
-  width: 100%;
-  padding-bottom: 20px;
+  z-index: 1000;
 }
 
-/* Base style for orbit child buttons */
+/* వాయిస్/ఆర్బిట్ మోడ్ ఆన్‌లో ఉన్నప్పుడు మాత్రమే కనిపిస్తుంది */
+.action-menu-container.show {
+  display: flex;
+}
+
+/* ఆర్బిట్ సబ్ బటన్లు (X మరియు +) */
 .action-menu-container .orbit-btn {
   position: absolute;
   width: 44px;
   height: 44px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.08);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(30, 30, 35, 0.85);
+  backdrop-filter: blur(10px);
+  border: 1px solid rgba(255, 255, 255, 0.2);
   color: #ffffff;
   display: flex;
   align-items: center;
   justify-content: center;
   cursor: pointer;
-  opacity: 0;
-  pointer-events: none;
-  transform: translate(0, 0) scale(0.5);
-  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  font-size: 18px;
+  transition: all 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275);
   z-index: 5;
 }
 
-/* Expanded state for orbit buttons */
-.action-menu-container.active .orbit-btn {
-  opacity: 1;
-  pointer-events: auto;
+/* X బటన్ ఎడమ వైపుకి */
+.action-menu-container .orbit-btn.btn-left {
+  transform: translate(-70px, 0);
 }
 
-/* Left button (Close / Cancel) */
-.action-menu-container.active .orbit-btn.btn-left {
-  transform: translate(-75px, -15px) scale(1);
+/* + బటన్ కుడి వైపుకి */
+.action-menu-container .orbit-btn.btn-right {
+  transform: translate(70px, 0);
 }
 
-/* Right button (Plus / Menu) */
-.action-menu-container.active .orbit-btn.btn-right {
-  transform: translate(75px, -15px) scale(1);
-}
-
-/* Center main mic glow highlight */
+/* మధ్యలో ఉండే మైక్ బటన్ */
 #mic-main-btn {
   position: relative;
   z-index: 10;
-  transition: transform 0.3s ease;
-}
-
-.action-menu-container.active #mic-main-btn {
-  transform: scale(1.08);
+  width: 58px;
+  height: 58px;
+  border-radius: 50%;
+  background: #2563eb;
+  border: none;
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
