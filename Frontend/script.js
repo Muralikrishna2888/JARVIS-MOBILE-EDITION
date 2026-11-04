@@ -229,7 +229,7 @@ async function requestGeminiInteraction(inputMessage) {
   const jarvisSystemPrompt = `
 You are JARVIS, an ultra-intelligent, highly advanced, and loyal AI personal assistant built for your boss, Eshwar.
 Guidelines for your responses:
-1. Address the user respectfully as 'Sir' or 'Boss Eshwar'.
+1. Address the user respectfully as 'Sir' or 'Eshwar'.
 2. Tone: Crisp, intelligent, confident, witty, and polite.
 3. Brevity: Keep conversational answers concise and directly to the point.
 4. Language: Respond fluently in Telugu, English, or Telugish matching Sir's language.
@@ -456,6 +456,64 @@ function initJarvisApp() {
       if (index === 0) {
         const overlay = document.getElementById('full-screen-overlay');
         if (overlay) overlay.remove();
+          // --- Bottom Sheet & Action Menu Integration ---
+  const plusBtn = document.getElementById('plus-menu-btn');
+  const closeBtn = document.getElementById('close-btn');
+  const actionSheet = document.getElementById('action-sheet-menu');
+  const backdrop = document.getElementById('action-sheet-backdrop');
+
+  function openActionMenu() {
+    if (actionSheet && backdrop) {
+      actionSheet.classList.add('active');
+      backdrop.classList.add('active');
+    }
+  }
+
+  function closeActionMenu() {
+    if (actionSheet && backdrop) {
+      actionSheet.classList.remove('active');
+      backdrop.classList.remove('active');
+    }
+  }
+
+  if (plusBtn) plusBtn.addEventListener('click', openActionMenu);
+  if (backdrop) backdrop.addEventListener('click', closeActionMenu);
+
+  if (closeBtn) {
+    closeBtn.addEventListener('click', () => {
+      closeActionMenu();
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    });
+  }
+
+  document.getElementById('act-take-photo')?.addEventListener('click', () => {
+    closeActionMenu();
+    document.getElementById('camera-input')?.click();
+  });
+
+  document.getElementById('act-photo-library')?.addEventListener('click', () => {
+    closeActionMenu();
+    document.getElementById('gallery-input')?.click();
+  });
+
+  document.getElementById('act-file')?.addEventListener('click', () => {
+    closeActionMenu();
+    document.getElementById('file-input')?.click();
+  });
+
+  document.getElementById('act-live-camera')?.addEventListener('click', () => {
+    closeActionMenu();
+    if (navigator.mediaDevices && navigator.mediaDevices.getUserMedia) {
+      navigator.mediaDevices.getUserMedia({ video: true })
+        .then(stream => {
+          speakNaturally("Live camera feed initiated, Sir.");
+        })
+        .catch(err => {
+          console.warn("Camera access denied:", err);
+        });
+    }
+  });
+
       }
     });
   });
