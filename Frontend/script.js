@@ -724,3 +724,116 @@ document.getElementById('act-file')?.addEventListener('click', () => {
   document.getElementById('file-input')?.click();
   backdrop.click();
 });
+// ===== FILE / IMAGE HANDLING & SENDING =====
+const galleryInput = document.getElementById('gallery-input');
+const cameraInput = document.getElementById('camera-input');
+const fileInput = document.getElementById('file-input');
+
+function handleImageUpload(file) {
+  if (!file) return;
+
+  const reader = new FileReader();
+  reader.onload = function(e) {
+    const base64Data = e.target.result;
+
+    // 1. చాట్ స్క్రీన్‌లో ఇమేజ్ ప్రివ్యూ మెసేజ్ చూపించడం
+    if (typeof appendMessage === 'function') {
+      appendMessage('user', `<img src="${base64Data}" style="max-width: 200px; border-radius: 10px; display: block; margin-top: 5px;" alt="Uploaded Image" />`);
+    }
+
+    // 2. జార్విస్ / జెమినై API కి పంపించడం
+    if (typeof sendToGeminiWithImage === 'function') {
+      sendToGeminiWithImage(base64Data, "Describe or process this image");
+    } else if (typeof triggerJarvisSend === 'function') {
+      triggerJarvisSend("[Image attached]", base64Data);
+    }
+  };
+  reader.readAsDataURL(file);
+}
+
+// గ్యాలరీ & కెమెరా ఇన్పుట్స్ నుండి ఫైల్ సెలెక్ట్ చేసినప్పుడు
+galleryInput?.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files[0]) {
+    handleImageUpload(e.target.files[0]);
+    e.target.value = ''; // రీసెట్ చేయడానికి
+  }
+});
+
+cameraInput?.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files[0]) {
+    handleImageUpload(e.target.files[0]);
+    e.target.value = '';
+  }
+});
+
+fileInput?.addEventListener('change', (e) => {
+  if (e.target.files && e.target.files[0]) {
+    handleImageUpload(e.target.files[0]);
+    e.target.value = '';
+  }
+});
+// ===== LIVE CAMERA STREAM & CAPTURE LOGIC =====
+const liveCameraModal = document.getElementById('live-camera-modal');
+const cameraStream = document.getElementById('camera-stream');
+const snapBtn = document.getElementById('snap-photo-btn');
+const closeCameraBtn = document.getElementById('close-camera-btn');
+const cameraCanvas = document.getElementById('camera-canvas');
+let streamTrack = null;
+
+// 'Live camera' క్లిక్ చేసినప్పుడు కెమెరా ఆన్ చేయడం
+document.getElementById('act-live-camera')?.addEventListener('click', async () => {
+  if (backdrop && actionSheet) {
+    actionSheet.classList.remove('active');
+    backdrop.classList.remove('active');
+  }
+
+  try {
+    const stream = await navigator.mediaDevices.getUserMedia({
+      video: { facingMode: 'environment' }, // బ్యాక్ కెమెరా ఓపెన్ అవుతుంది
+      audio: false
+    });
+    streamTrack = stream;
+    cameraStream.srcObject = stream;
+    liveCameraModal.style.display = 'flex';
+  } catch (err) {
+    alert('కెమెరా పర్మిషన్ లభించలేదు లేదా కెమెరా ఓపెన్ కాలేదు: ' + err.message);
+  }
+});
+
+// కెమెరా బటన్ క్లిక్ చేసి ఫోటో తీయడం
+snapBtn?.addEventListener('click', () => {
+  if (!streamTrack) return;
+
+  const ctx = cameraCanvas.getContext('2d');
+  cameraCanvas.width = cameraStream.videoWidth;
+  cameraCanvas.height = cameraStream.videoHeight;
+  ctx.drawImage(cameraStream, 0, 0, cameraCanvas.width, cameraCanvas.height);
+
+  const base64Image = cameraCanvas.toDataURL('image/jpeg');
+
+  // స్ట్రీమ్ ఆపేసి విండో మూసివేయడం
+  stopLiveCamera();
+
+  // తీసిన ఫోటోను చాట్ మరియు API కి పంపడం
+  if (typeof handleImageUpload === 'function') {
+    // base64 నుండి నేరుగా హ్యాండిల్ చేయడానికి:
+    if (typeof appendMessage === 'function') {
+      appendMessage('user', `<img src="${base64Image}" style="max-width:200px; border-radius:10px; display:block; margin-top:5px;" />`);
+    }
+    if (typeof triggerJarvisSend === 'function') {
+      triggerJarvisSend("[Live Photo Captured]", base64Image);
+    }
+  }
+});
+
+// కెమెరా మూసివేయడానికి
+function stopLiveCamera() {
+  if (streamTrack) {
+    streamTrack.getTracks().forEach(track => track.stop());
+    streamTrack = null;
+  }
+  if (liveCameraModal) liveCameraModal.style.display = 'none';
+}
+
+closeCameraBtn?.addEventListener('click', stopLiveCamera);
+
