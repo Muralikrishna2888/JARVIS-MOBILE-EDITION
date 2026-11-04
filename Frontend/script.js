@@ -107,7 +107,14 @@ async function handleTools(text) {
       return 'Could not access torch directly, Sir.';
     }
   }
-
+  
+  // App Installer (Play Store Direct Intent)
+  const installMatch = t.match(/(?:install|download|ఇన్‌స్టాల్|డౌన్‌లోడ్)\s+([a-zA-Z0-9_\s]+)/i);
+  if (installMatch) {
+    const appQuery = encodeURIComponent(installMatch[1].trim());
+    window.location.href = `market://search?q=${appQuery}`;
+    return `Opening Play Store to install ${installMatch[1].trim()}, Sir.`;
+  }
   // App Launcher
   const appMatch = t.match(/(?:open|launch|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (appMatch) {
