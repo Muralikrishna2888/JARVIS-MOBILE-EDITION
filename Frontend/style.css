@@ -433,3 +433,4 @@ body.jarvis-dark {
 .action-item:active {
   color: #60a5fa;
 }
+action-menu-container{display:flex;justifycontent:center;aligntems:center;}
