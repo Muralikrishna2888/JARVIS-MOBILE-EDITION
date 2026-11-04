@@ -434,3 +434,62 @@ body.jarvis-dark {
   color: #60a5fa;
 }
 action-menu-container{display:flex;justifycontent:center;aligntems:center;}
+
+/* Orbit Menu Container */
+.action-menu-container {
+  position: relative;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 100%;
+  padding-bottom: 20px;
+}
+
+/* Base style for orbit child buttons */
+.action-menu-container .orbit-btn {
+  position: absolute;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.08);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(0, 0) scale(0.5);
+  transition: all 0.35s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+  z-index: 5;
+}
+
+/* Expanded state for orbit buttons */
+.action-menu-container.active .orbit-btn {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+/* Left button (Close / Cancel) */
+.action-menu-container.active .orbit-btn.btn-left {
+  transform: translate(-75px, -15px) scale(1);
+}
+
+/* Right button (Plus / Menu) */
+.action-menu-container.active .orbit-btn.btn-right {
+  transform: translate(75px, -15px) scale(1);
+}
+
+/* Center main mic glow highlight */
+#mic-main-btn {
+  position: relative;
+  z-index: 10;
+  transition: transform 0.3s ease;
+}
+
+.action-menu-container.active #mic-main-btn {
+  transform: scale(1.08);
+}
