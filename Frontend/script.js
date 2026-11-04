@@ -662,20 +662,65 @@ function speakNaturally(textToSpeak) {
   if (naturalVoice) utterance.voice = naturalVoice;
   window.speechSynthesis.speak(utterance);
 }
-// ===== 6. ORBIT ACTION MENU TOGGLE =====
+// ===== ORBIT ACTION CONTROLS & BOTTOM SHEET LOGIC =====
 const menuContainer = document.getElementById('actionMenuContainer');
 const micBtn = document.getElementById('mic-main-btn');
 const closeBtn = document.getElementById('close-btn');
+const plusBtn = document.getElementById('plus-menu-btn');
 
-if (micBtn && menuContainer) {
-  micBtn.addEventListener('click', () => {
-    menuContainer.classList.toggle('active');
+const actionSheet = document.getElementById('action-sheet-menu');
+const backdrop = document.getElementById('action-sheet-backdrop');
+
+// 1. స్పియర్ (గోళం) మీద టచ్ చేసినప్పుడు ఆర్బిట్ కంట్రోలర్ కనిపించేలా చేయడం
+const sphereCanvas = document.getElementById('particle-sphere');
+if (sphereCanvas && menuContainer) {
+  sphereCanvas.addEventListener('click', () => {
+    menuContainer.classList.add('show');
   });
 }
 
+// 2. క్లోజ్ బటన్ (✕) నొక్కితే మొత్తం మెనూ దాగిపోవడం
 if (closeBtn && menuContainer) {
   closeBtn.addEventListener('click', (e) => {
     e.stopPropagation();
-    menuContainer.classList.remove('active');
+    menuContainer.classList.remove('show');
+    if (typeof isCoreListening !== 'undefined' && isCoreListening) {
+      // వాయిస్ రికగ్నిషన్ ఆన్‌లో ఉంటే ఆపేయడం
+      if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+      isCoreListening = false;
+    }
   });
 }
+
+// 3. ప్లస్ (+) బటన్ నొక్కినప్పుడు 'Take photo, Library, File' మెనూ ఓపెన్ చేయడం
+if (plusBtn && actionSheet && backdrop) {
+  plusBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    actionSheet.classList.add('active');
+    backdrop.classList.add('active');
+  });
+}
+
+// 4. బ్యాక్‌డ్రాప్ క్లిక్ చేస్తే బాటమ్ షీట్ క్లోజ్ అవ్వడం
+if (backdrop && actionSheet) {
+  backdrop.addEventListener('click', () => {
+    actionSheet.classList.remove('active');
+    backdrop.classList.remove('active');
+  });
+}
+
+// 5. బాటమ్ షీట్ లోని ఐటెమ్స్ (Camera, Gallery, File) క్లిక్ యాక్షన్స్
+document.getElementById('act-take-photo')?.addEventListener('click', () => {
+  document.getElementById('camera-input')?.click();
+  backdrop.click();
+});
+
+document.getElementById('act-photo-library')?.addEventListener('click', () => {
+  document.getElementById('gallery-input')?.click();
+  backdrop.click();
+});
+
+document.getElementById('act-file')?.addEventListener('click', () => {
+  document.getElementById('file-input')?.click();
+  backdrop.click();
+});
