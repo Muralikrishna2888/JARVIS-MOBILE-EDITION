@@ -497,3 +497,104 @@ action-menu-container{display:flex;justifycontent:center;aligntems:center;}
   justify-content: center;
   box-shadow: 0 4px 15px rgba(37, 99, 235, 0.4);
 }
+/* Model Selector Dropdown */
+.model-dropdown-container {
+  position: relative;
+  display: inline-block;
+}
+
+.model-dropdown-btn {
+  background: transparent;
+  border: none;
+  color: #ffffff;
+  font-family: inherit;
+  font-size: 1.15rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 12px;
+  transition: background 0.2s ease, transform 0.15s ease;
+}
+
+.model-dropdown-btn:active {
+  background: rgba(255, 255, 255, 0.08);
+  transform: scale(0.97);
+}
+
+.dropdown-chevron {
+  transition: transform 0.25s ease;
+}
+
+.model-dropdown-btn.open .dropdown-chevron {
+  transform: rotate(180deg);
+}
+
+/* Dropdown Menu Box */
+.model-menu {
+  position: absolute;
+  top: 110%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-6px);
+  width: 250px;
+  background: rgba(20, 20, 24, 0.95);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.12);
+  border-radius: 16px;
+  padding: 6px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.6);
+  opacity: 0;
+  pointer-events: none;
+  visibility: hidden;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  z-index: 1500;
+}
+
+.model-menu.show {
+  opacity: 1;
+  pointer-events: auto;
+  visibility: visible;
+  transform: translateX(-50%) translateY(0);
+}
+
+/* Individual Item */
+.model-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 12px;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.model-menu-item:hover, .model-menu-item:active {
+  background: rgba(255, 255, 255, 0.08);
+}
+
+.model-menu-item.active {
+  background: rgba(37, 99, 235, 0.2);
+  border: 1px solid rgba(37, 99, 235, 0.4);
+}
+
+.model-item-info {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  text-align: left;
+}
+
+.model-name {
+  color: #ffffff;
+  font-size: 0.92rem;
+  font-weight: 600;
+}
+
+.model-desc {
+  color: #9ca3af;
+  font-size: 0.75rem;
+}
+
