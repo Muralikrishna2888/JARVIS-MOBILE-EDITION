@@ -662,3 +662,20 @@ function speakNaturally(textToSpeak) {
   if (naturalVoice) utterance.voice = naturalVoice;
   window.speechSynthesis.speak(utterance);
 }
+// ===== 6. ORBIT ACTION MENU TOGGLE =====
+const menuContainer = document.getElementById('actionMenuContainer');
+const micBtn = document.getElementById('mic-main-btn');
+const closeBtn = document.getElementById('close-btn');
+
+if (micBtn && menuContainer) {
+  micBtn.addEventListener('click', () => {
+    menuContainer.classList.toggle('active');
+  });
+}
+
+if (closeBtn && menuContainer) {
+  closeBtn.addEventListener('click', (e) => {
+    e.stopPropagation();
+    menuContainer.classList.remove('active');
+  });
+}
