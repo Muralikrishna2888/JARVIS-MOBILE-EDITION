@@ -272,7 +272,14 @@ Instructions:
 4. Do not repeat facts unnecessarily; simply follow them naturally.
 5. Tone: Crisp, intelligent, confident, witty, and polite.
 6. Language: Respond fluently in Telugu, English, or Telugish matching Sir's language.
+
+Voice & Conversation Behavior (Like Gemini):
+7. Spoken Fluency: Keep spoken responses concise and conversational (1 to 3 sentences maximum for general talk). Never output lengthy paragraphs unless explicitly asked for detailed explanations or code.
+8. Human-like Delivery: Speak smoothly and naturally like a smart peer, avoiding robotic phrases, awkward filler words, or repetitive openings.
+9. Telugu Flow: When replying in Telugu or Telugish, ensure the wording is natural, grammatically clean, and easy for the text-to-speech engine to pronounce clearly without stumbles.
+10. Multimodal Awareness: Always reference and remember visual details from uploaded images or camera captures within the current conversation context.
 `;
+
 
   let attempts = 3;
   let response = null;
@@ -718,25 +725,72 @@ function cleanTextForSpeech(text) {
     .trim();
 }
 
-function speakNaturally(textToSpeak) {
+// =====  FLUENT NATURAL VOICE ENGINE =====
+let synthVoices = [];
+
+// బ్రౌజర్‌లో ఉన్న సహజమైన వాయిస్‌లను లోడ్ చేయడం
+function loadFluentVoices() {
   if (!('speechSynthesis' in window)) return;
-  const cleanText = cleanTextForSpeech(textToSpeak);
+  synthVoices = window.speechSynthesis.getVoices();
+}
+
+if ('speechSynthesis' in window) {
+  loadFluentVoices();
+  window.speechSynthesis.onvoiceschanged = loadFluentVoices;
+}
+
+// టెక్స్ట్‌ను పర్ఫెక్ట్‌గా క్లీన్ చేసే ఫిల్టర్ (తడబడకుండా చదవడానికి)
+function sanitizeTextForSpeech(text) {
+  if (!text) return '';
+  return text
+    // ఎమోజీలను తొలగించడం
+    .replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F900}-\u{1F9FF}\u{1F1E0}-\u{1F1FF}]/gu, '')
+    // కోడ్ బ్లాక్స్, బ్రాకెట్లు, మార్క్‌డౌన్ సింబల్స్ తొలగించడం
+    .replace(/```[\s\S]*?```/g, 'Here is the code, Sir.')
+    .replace(/`.*?`/g, '')
+    .replace(/[*#_~>\[\]()]/g, '')
+    .replace(/\[\[MEMORY_STORE:.*?\]\]/g, '') // ఇంటర్నల్ మెమరీ ట్యాగ్స్ చదవకూడదు
+    .replace(/\s+/g, ' ')
+    .trim();
+}
+
+// నాలాగే ఫ్లూయెంట్‌గా మాట్లాడే ఫంక్షన్
+function speakNaturally(rawText) {
+  if (!('speechSynthesis' in window)) return;
+
+  const cleanText = sanitizeTextForSpeech(rawText);
   if (!cleanText) return;
 
+  // మునుపటి వాయిస్ నడుస్తుంటే ఆపేయడం
   window.speechSynthesis.cancel();
+
   const utterance = new SpeechSynthesisUtterance(cleanText);
-  utterance.rate = 1.0;
-  utterance.pitch = 1.0;
 
-  const voices = window.speechSynthesis.getVoices();
-  const naturalVoice = voices.find(v => 
-    (v.name.includes('Google') || v.name.includes('Natural')) && 
-    (v.lang.startsWith('en') || v.lang.startsWith('te'))
-  ) || voices.find(v => v.lang.startsWith('en')) || voices[0];
+  // ఫ్లూయెంట్ వాయిస్ ఎంపిక (Google Natural / Neural Voices)
+  if (!synthVoices.length) loadFluentVoices();
 
-  if (naturalVoice) utterance.voice = naturalVoice;
+  const highQualityVoice = synthVoices.find(v => 
+    v.lang.includes('te') || // తెలుగు సపోర్ట్ ఉంటే మొదటి ప్రాధాన్యత
+    (v.name.includes('Natural') && v.lang.includes('en-IN')) ||
+    (v.name.includes('Google') && v.lang.includes('en-IN')) ||
+    v.name.includes('Google UK English Female') ||
+    v.name.includes('Google US English')
+  ) || synthVoices[0];
+
+  if (highQualityVoice) {
+    utterance.voice = highQualityVoice;
+  }
+
+  // మాట్లాడే వేగం & శైలి (మరీ స్పీడ్ కాకుండా, సహజంగా ఉండేలా)
+  utterance.rate = 1.02; // నాచురల్ స్పీకింగ్ పేస్
+  utterance.pitch = 1.0; 
+
+  // పొడవైన వాక్యాల వల్ల బ్రౌజర్ ఆగిపోకుండా ఉండేందుకు హ్యాండ్లర్
+  utterance.onerror = (e) => console.error("Speech Error:", e);
+
   window.speechSynthesis.speak(utterance);
 }
+
 // ===== ORBIT ACTION CONTROLS & BOTTOM SHEET LOGIC =====
 const menuContainer = document.getElementById('actionMenuContainer');
 const micBtn = document.getElementById('mic-main-btn');
