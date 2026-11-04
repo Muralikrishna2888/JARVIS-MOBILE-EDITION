@@ -200,65 +200,76 @@ function triggerAndroidOrWebIntent(deepLink, webUrl) {
   }
 }
 
-// ===== 3. GEMINI SETUP WITH PERSISTENT USER FACTS & DYNAMIC MODEL SELECTOR =====
+// ===== 3. GEMINI SETUP & SECURE MODEL SELECTOR =====
 let API_KEY = localStorage.getItem('jarvis_key');
 if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-// డైనమిక్ మోడల్ సెలెక్టర్ సెటప్ (Jarvis 1.5 mini, 2.5 max, 3.8 max-pro)
+// డైనమిక్ మోడల్ సెలెక్టర్ సెటప్
 let GEMINI_MODEL = localStorage.getItem('jarvis_selected_model') || 'gemini-1.5-flash';
 let GEMINI_MODEL_LABEL = localStorage.getItem('jarvis_selected_label') || 'Jarvis 1.5 mini';
 
-const modelDropdownBtn = document.getElementById('model-dropdown-btn');
-const modelMenu = document.getElementById('model-menu');
-const modelLabel = document.getElementById('current-model-label');
-const modelItems = document.querySelectorAll('.model-menu-item');
+// ఎలిమెంట్స్ లోడ్ అయ్యాక మాత్రమే ఈవెంట్ లిజనర్స్ యాడ్ చేయడం (ఎర్రర్ రాకుండా)
+function initModelSelector() {
+  const modelDropdownBtn = document.getElementById('model-dropdown-btn');
+  const modelMenu = document.getElementById('model-menu');
+  const modelLabel = document.getElementById('current-model-label');
+  const modelItems = document.querySelectorAll('.model-menu-item');
 
-if (modelLabel) modelLabel.innerText = GEMINI_MODEL_LABEL;
-modelItems.forEach(item => {
-  if (item.getAttribute('data-model') === GEMINI_MODEL) {
-    item.classList.add('active');
-  } else {
-    item.classList.remove('active');
-  }
-});
+  if (modelLabel) modelLabel.innerText = GEMINI_MODEL_LABEL;
 
-modelDropdownBtn?.addEventListener('click', (e) => {
-  e.stopPropagation();
-  modelDropdownBtn.classList.toggle('open');
-  modelMenu?.classList.toggle('show');
-});
+  modelItems.forEach(item => {
+    if (item.getAttribute('data-model') === GEMINI_MODEL) {
+      item.classList.add('active');
+    } else {
+      item.classList.remove('active');
+    }
 
-modelItems.forEach(item => {
-  item.addEventListener('click', (e) => {
-    e.stopPropagation();
-    const chosenModel = item.getAttribute('data-model');
-    const chosenLabel = item.getAttribute('data-label');
+    item.onclick = (e) => {
+      e.stopPropagation();
+      const chosenModel = item.getAttribute('data-model');
+      const chosenLabel = item.getAttribute('data-label');
 
-    GEMINI_MODEL = chosenModel;
-    GEMINI_MODEL_LABEL = chosenLabel;
+      GEMINI_MODEL = chosenModel;
+      GEMINI_MODEL_LABEL = chosenLabel;
 
-    localStorage.setItem('jarvis_selected_model', chosenModel);
-    localStorage.setItem('jarvis_selected_label', chosenLabel);
+      localStorage.setItem('jarvis_selected_model', chosenModel);
+      localStorage.setItem('jarvis_selected_label', chosenLabel);
 
-    if (modelLabel) modelLabel.innerText = chosenLabel;
+      if (modelLabel) modelLabel.innerText = chosenLabel;
 
-    modelItems.forEach(i => i.classList.remove('active'));
-    item.classList.add('active');
+      modelItems.forEach(i => i.classList.remove('active'));
+      item.classList.add('active');
 
-    modelDropdownBtn?.classList.remove('open');
-    modelMenu?.classList.remove('show');
+      if (modelDropdownBtn) modelDropdownBtn.classList.remove('open');
+      if (modelMenu) modelMenu.classList.remove('show');
+    };
   });
-});
 
-document.addEventListener('click', (e) => {
-  if (modelMenu && !modelMenu.contains(e.target) && !modelDropdownBtn?.contains(e.target)) {
-    modelDropdownBtn?.classList.remove('open');
-    modelMenu?.classList.remove('show');
+  if (modelDropdownBtn && modelMenu) {
+    modelDropdownBtn.onclick = (e) => {
+      e.stopPropagation();
+      modelDropdownBtn.classList.toggle('open');
+      modelMenu.classList.toggle('show');
+    };
   }
-});
+
+  document.addEventListener('click', (e) => {
+    if (modelMenu && !modelMenu.contains(e.target) && modelDropdownBtn && !modelDropdownBtn.contains(e.target)) {
+      modelDropdownBtn.classList.remove('open');
+      modelMenu.classList.remove('show');
+    }
+  });
+}
+
+// పేజీ లోడ్ అయిన వెంటనే రన్ అవుతుంది
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initModelSelector);
+} else {
+  initModelSelector();
+}
 
 // 1. యూజర్ ప్రత్యేకంగా గుర్తుంచుకోమన్న వివరాల మెమరీ
 let USER_FACTS = [];
