@@ -1028,3 +1028,58 @@ function stopLiveCamera() {
 
 closeCameraBtn?.addEventListener('click', stopLiveCamera);
 
+// ===== DYNAMIC TIME-BASED GREETING & ROTATING TIPS =====
+function updateDynamicGreeting() {
+  const greetingTitle = document.getElementById('greeting-title');
+  const greetingSubtitle = document.getElementById('greeting-subtitle');
+
+  if (!greetingTitle) return;
+
+  // సమయాన్ని బట్టి మారే గ్రీటింగ్
+  const currentHour = new Date().getHours();
+  let timeGreeting = "Hello";
+
+  if (currentHour >= 5 && currentHour < 12) {
+    timeGreeting = "Good morning";
+  } else if (currentHour >= 12 && currentHour < 17) {
+    timeGreeting = "Good afternoon";
+  } else if (currentHour >= 17 && currentHour < 22) {
+    timeGreeting = "Good evening";
+  } else {
+    timeGreeting = "Working late";
+  }
+
+  greetingTitle.innerText = `${timeGreeting}, Eshwar.`;
+
+  // అప్పుడప్పుడు మారే సజెషన్స్ / టిప్స్
+  const jarvisTips = [
+    'Say "open Spotify" — Jarvis launches apps',
+    'Say "open YouTube" — Stream your favorites',
+    'Say "take a photo" — Visual inspection mode',
+    'Ask "what’s on my schedule today?"',
+    'Say "tell me a tech fact" — Quick insights',
+    'Say "open WhatsApp" — Connect instantly',
+    'Ask "who built you?" — Meet your creator'
+  ];
+
+  if (greetingSubtitle) {
+    const randomTip = jarvisTips[Math.floor(Math.random() * jarvisTips.length)];
+    greetingSubtitle.innerText = randomTip;
+
+    setInterval(() => {
+      const nextTip = jarvisTips[Math.floor(Math.random() * jarvisTips.length)];
+      greetingSubtitle.style.opacity = 0;
+      setTimeout(() => {
+        greetingSubtitle.innerText = nextTip;
+        greetingSubtitle.style.opacity = 1;
+      }, 300);
+    }, 8000);
+  }
+}
+
+// పేజీ లోడ్ అయిన వెంటనే రన్ అవుతుంది
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', updateDynamicGreeting);
+} else {
+  updateDynamicGreeting();
+}
