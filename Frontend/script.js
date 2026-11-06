@@ -37,7 +37,38 @@ function saveToHistory(userText) {
 
 // 👉 1. User Knowledge Base (Jarvis Memory Profile)
 const UserKnowledgeBase = {
-  // 👉 Real-time Device Context Engine
+  getProfile: () => {
+    return JSON.parse(localStorage.getItem('jarvis_profile') || JSON.stringify({
+      name: "Eshwar",
+      role: "Creator & Lead Architect",
+      coreProjects: ["Jarvis Mobile Assistant"],
+      coreFacts: [
+        "Prefers direct, fluff-free responses.",
+        "Fluent in English and Telugu.",
+        "Primary device: Android smartphone."
+      ]
+    }));
+  },
+  
+  appendFact: (fact) => {
+    if (!fact) return;
+    const profile = UserKnowledgeBase.getProfile();
+    if (!profile.coreFacts) profile.coreFacts = [];
+    if (!profile.coreFacts.includes(fact)) {
+      profile.coreFacts.push(fact);
+      localStorage.setItem('jarvis_profile', JSON.stringify(profile));
+    }
+  },
+
+  getAllFactsFormatted: () => {
+    const profile = UserKnowledgeBase.getProfile();
+    const facts = profile.coreFacts || [];
+    if (facts.length === 0) return "No stored facts yet.";
+    return facts.map((fact, idx) => `${idx + 1}. ${fact}`).join('\n');
+  }
+};
+
+// 👉 2. Real-time Device Context Engine
 async function buildDynamicContext() {
   const now = new Date();
   const timeString = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
@@ -60,37 +91,30 @@ async function buildDynamicContext() {
   return `[System Telemetry | Time: ${timeString}, ${dateString} | Battery: ${batteryStatus} | Boss: ${profile.name || 'Eshwar'} | Projects: ${projects}]`;
 }
 
-  getProfile: () => {
-    return JSON.parse(localStorage.getItem('jarvis_profile') || JSON.stringify({
-      name: "Eshwar",
-      role: "Creator & Lead Architect",
-      coreFacts: [
-        "Prefers direct, fluff-free responses.",
-        "Fluent in English and Telugu.",
-        "Primary device: Android smartphone."
-      ]
-    }));
-  },
-  
-  appendFact: (fact) => {
-    if (!fact) return;
-    const profile = UserKnowledgeBase.getProfile();
-    if (!profile.coreFacts) profile.coreFacts = [];
-    if (!profile.coreFacts.includes(fact)) {
-      profile.coreFacts.push(fact);
-      localStorage.setItem('jarvis_profile', JSON.stringify(profile));
-    }
-  },
+// 👉 3. Termux Ollama Local Brain API Engine (Offline Mode)
+async function queryLocalOllama(promptText) {
+  const telemetry = await buildDynamicContext();
+  const fullPrompt = `${telemetry}\nUser: ${promptText}\nAssistant:`;
 
-  // Missing function that caused the error:
-  getAllFactsFormatted: () => {
-    const profile = UserKnowledgeBase.getProfile();
-    const facts = profile.coreFacts || [];
-    if (facts.length === 0) return "No stored facts yet.";
-    return facts.map((fact, idx) => `${idx + 1}. ${fact}`).join('\n');
+  const response = await fetch('http://127.0.0.1:11434/api/generate', {
+    method: 'POST',
+    headers: {
+      'Content-Type': 'application/json'
+    },
+    body: JSON.stringify({
+      model: 'tinyllama',
+      prompt: fullPrompt,
+      stream: false
+    })
+  });
+
+  if (!response.ok) {
+    throw new Error(`Local Brain Server Error: ${response.status}`);
   }
-};
 
+  const data = await response.json();
+  return data.response.trim();
+}
 
 // ===== 2. DEVICE TOOLS (REFLEX LAYER) =====
 async function handleTools(text) {
@@ -172,6 +196,7 @@ async function handleTools(text) {
     window.location.href = `market://search?q=${appQuery}`;
     return `Opening Play Store to install ${installMatch[1].trim()}, Sir.`;
   }
+
   // App Launcher
   const appMatch = t.match(/(?:open|launch|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (appMatch) {
@@ -239,7 +264,9 @@ function routeMediaIntent(spokenText) {
 }
 
 function playOnYouTube(searchQuery) {
-  speakNaturally(`Playing ${searchQuery} on YouTube.`);
+  if (typeof speakNaturally === 'function') {
+    speakNaturally(`Playing ${searchQuery} on YouTube.`);
+  }
   const encodedQuery = encodeURIComponent(searchQuery);
   const intentUri = `intent://www.youtube.com/results?search_query=${encodedQuery}#Intent;scheme=https;package=com.google.android.youtube;end`;
   const webFallbackUri = `https://www.youtube.com/results?search_query=${encodedQuery}`;
@@ -247,7 +274,9 @@ function playOnYouTube(searchQuery) {
 }
 
 function playOnSpotify(searchQuery) {
-  speakNaturally(`Playing ${searchQuery} on Spotify.`);
+  if (typeof speakNaturally === 'function') {
+    speakNaturally(`Playing ${searchQuery} on Spotify.`);
+  }
   const encodedQuery = encodeURIComponent(searchQuery);
   const spotifyUri = `spotify:search:${encodedQuery}`;
   const webFallbackUri = `https://open.spotify.com/search/${encodedQuery}`;
@@ -264,6 +293,7 @@ function triggerAndroidOrWebIntent(deepLink, webUrl) {
     window.open(webUrl, '_blank');
   }
 }
+
 
 // ===== 3. GEMINI SETUP & SECURE MODEL SELECTOR =====
 let API_KEY = localStorage.getItem('jarvis_key');
