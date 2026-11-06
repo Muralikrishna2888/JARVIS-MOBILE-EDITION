@@ -14,7 +14,7 @@
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><polyline points="12 6 12 12 16 14"></polyline></svg>
     </button>
     
-    <!-- Model Selector Header Dropdown -->
+    <!-- Model Selector Header Dropdown (Center) -->
     <div class="model-dropdown-container">
       <button id="model-dropdown-btn" class="model-dropdown-btn" type="button">
         <span id="current-model-label">Jarvis 1.5 mini</span>
@@ -25,46 +25,48 @@
       
       <!-- Model List Menu -->
       <div id="model-menu" class="model-menu">
-        <!-- 1. Jarvis 1.5 mini -> gemini-3.1-flash -->
-        <div class="model-menu-item active" data-model="gemini-3.1-flash" data-label="Jarvis 1.5 mini">
+        <!-- 1. Jarvis 1.5 mini -> gemini-2.5-flash -->
+        <div class="model-menu-item active" data-model="gemini-2.5-flash" data-label="Jarvis 1.5 mini">
           <div class="model-item-info">
             <span class="model-name">Jarvis 1.5 mini</span>
-            <span class="model-desc">Fast, responsive & lightweight</span>
+            <span class="model-desc">Fast, responsive & reliable</span>
           </div>
         </div>
 
-        <!-- 2. Jarvis 2.5 max -> gemini-3.5-flash -->
-        <div class="model-menu-item" data-model="gemini-3.5-flash" data-label="Jarvis 2.5 max">
+        <!-- 2. Jarvis 2.5 max -> gemini-2.5-pro -->
+        <div class="model-menu-item" data-model="gemini-2.5-pro" data-label="Jarvis 2.5 max">
           <div class="model-item-info">
             <span class="model-name">Jarvis 2.5 max</span>
             <span class="model-desc">Next-gen intelligence & speed</span>
           </div>
         </div>
 
-        <!-- 3. Jarvis 3.8 max-pro -> gemini-3.8-flash -->
-        <div class="model-menu-item" data-model="gemini-3.8-flash" data-label="Jarvis 3.8 max-pro">
+        <!-- 3. Jarvis 3.8 max-pro -> gemini-2.0-flash-lite -->
+        <div class="model-menu-item" data-model="gemini-2.0-flash-lite" data-label="Jarvis 3.8 max-pro">
           <div class="model-item-info">
             <span class="model-name">Jarvis 3.8 max-pro</span>
-            <span class="model-desc">Ultra-advanced intelligence & speed</span>
+            <span class="model-desc">Ultra lightweight & quick</span>
           </div>
         </div>
       </div>
+    </div> <!-- 👈 ఇంతకుముందు మిస్ అయిన క్లోజింగ్ DIV ఇది -->
 
+    <!-- Settings Button (Right Top) -->
     <button class="icon-btn" id="settings-btn" aria-label="Settings">
       <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
     </button>
   </header>
 
-
   <!-- Center Stage -->
-  <main class="core-stage">
+  <main class="core-stage" id="core-stage">
     <div class="sphere-wrapper">
       <canvas id="particle-sphere"></canvas>
     </div>
 
     <div class="greeting-box">
-      <h1 id="dynamic-greeting">Evening, Eshwar.</h1>
-      <p class="sub-prompt">Say "open Spotify" — Jarvis launches apps</p>
+      <!-- జావాస్క్రిప్ట్ అప్‌డేట్ చేయడానికి సరిగ్గా మ్యాచ్ చేసిన IDలు -->
+      <h1 id="greeting-title">Evening, Eshwar.</h1>
+      <p id="greeting-subtitle" class="sub-prompt">Say "open Spotify" — Jarvis launches apps</p>
       <div class="action-tags">
         <span>Tell me what to build next</span>
         <span class="dot">·</span>
@@ -88,7 +90,8 @@
       <input type="text" id="msg" placeholder="Ask Jarvis anything..." />
       <button id="send" class="send-button">➤</button>
     </div>
-        <nav class="bottom-tabs">
+    
+    <nav class="bottom-tabs">
       <button class="tab-item active">
         <span>Jarvis</span>
       </button>
@@ -104,19 +107,16 @@
     </nav>
   </footer>
   
-<script type="importmap">
-{
-  "imports": {
-    "@google/genai": "https://esm.run/@google/genai"
+  <script type="importmap">
+  {
+    "imports": {
+      "@google/genai": "https://esm.run/@google/genai"
+    }
   }
-}
-</script>
+  </script>
 
   <script type="module" src="script.js?v=2"></script>
   
-    <!-- Main Action Controls (Bottom) -->
-  <div class="bottom-action-bar">
-    
   <!-- Main Action Controls (Orbit) -->
   <div class="action-menu-container" id="actionMenuContainer">
     <button id="close-btn" class="circle-btn small-btn orbit-btn btn-left">✕</button>
@@ -148,17 +148,15 @@
   <input type="file" id="gallery-input" accept="image/*" style="display: none;">
   <input type="file" id="file-input" style="display: none;">
     
-<!-- Live Camera Modal -->
-<div id="live-camera-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:2000; flex-direction:column; align-items:center; justify-content:center;">
-  <video id="camera-stream" autoplay playsinline style="width:100%; height:80%; object-fit:cover;"></video>
-  <div style="position:absolute; bottom:30px; display:flex; gap:20px; align-items:center;">
-    <button id="snap-photo-btn" style="width:65px; height:65px; border-radius:50%; background:#fff; border:4px solid #2563eb; cursor:pointer;"></button>
-    <button id="close-camera-btn" style="position:absolute; right:-70px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px;">✕</button>
+  <!-- Live Camera Modal -->
+  <div id="live-camera-modal" style="display:none; position:fixed; top:0; left:0; width:100vw; height:100vh; background:#000; z-index:2000; flex-direction:column; align-items:center; justify-content:center;">
+    <video id="camera-stream" autoplay playsinline style="width:100%; height:80%; object-fit:cover;"></video>
+    <div style="position:absolute; bottom:30px; display:flex; gap:20px; align-items:center;">
+      <button id="snap-photo-btn" style="width:65px; height:65px; border-radius:50%; background:#fff; border:4px solid #2563eb; cursor:pointer;"></button>
+      <button id="close-camera-btn" style="position:absolute; right:-70px; width:44px; height:44px; border-radius:50%; background:rgba(255,255,255,0.2); border:none; color:#fff; font-size:20px;">✕</button>
+    </div>
+    <canvas id="camera-canvas" style="display:none;"></canvas>
   </div>
-  <canvas id="camera-canvas" style="display:none;"></canvas>
-</div>
-
 
 </body>
 </html>
-
