@@ -668,6 +668,68 @@ function initJarvisApp() {
   }
 }
 
+ * cosY - p.nz * currentRadius * sinY;
+      let z1 = p.nz * currentRadius * cosY + p.nx * currentRadius * sinY;
+      let y1 = p.ny * currentRadius;
+
+      const fov = 250;
+      const scale = fov / (fov + z1);
+      const projX = x1 * scale + cx;
+      const projY = y1 * scale + cy;
+
+      const alpha = Math.max(0.2, (z1 + currentRadius) / (2 * currentRadius));
+      ctx.beginPath();
+      ctx.arc(projX, projY, Math.max(1, (isCoreListening ? 1.8 : 1.4) * scale), 0, Math.PI * 2);
+      ctx.fillStyle = isCoreListening ? `rgba(0, 240, 255, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
+      ctx.fill();
+    });
+    requestAnimationFrame(render);
+  }
+  render();
+
+  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+  if (!SpeechRecognition) return;
+
+  const coreMic = new SpeechRecognition();
+  coreMic.continuous = false;
+  coreMic.interimResults = false;
+  coreMic.lang = 'en-IN';
+
+  canvas.addEventListener('pointerdown', (e) => {
+    e.preventDefault();
+    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
+    
+    if (isCoreListening) {
+      coreMic.stop();
+      isCoreListening = false;
+      return;
+    }
+
+    try {
+      coreMic.start();
+      isCoreListening = true;
+      if ('vibrate' in navigator) navigator.vibrate(40);
+    } catch (err) {
+      console.error(err);
+    }
+  });
+
+  coreMic.onresult = (event) => {
+    let transcript = '';
+    for (let i = event.resultIndex; i < event.results.length; ++i) {
+      transcript += event.results[i][0].transcript;
+    }
+    const cleanText = transcript.trim();
+    if (cleanText && typeof triggerJarvisSend === 'function') {
+      triggerJarvisSend(cleanText);
+    }
+  };
+
+  coreMic.onerror = () => { isCoreListening = false; };
+  coreMic.onend = () => { isCoreListening = false; };
+}
+
+
 // ===== 5. 3D PARTICLE SPHERE & TOUCH MIC =====
 let isCoreListening = false;
 
