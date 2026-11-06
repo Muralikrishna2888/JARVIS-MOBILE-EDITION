@@ -37,6 +37,29 @@ function saveToHistory(userText) {
 
 // 👉 1. User Knowledge Base (Jarvis Memory Profile)
 const UserKnowledgeBase = {
+  // 👉 Real-time Device Context Engine
+async function buildDynamicContext() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const dateString = now.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+  
+  let batteryStatus = 'Unknown';
+  if ('getBattery' in navigator) {
+    try {
+      const b = await navigator.getBattery();
+      batteryStatus = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Discharging'})`;
+    } catch (_) {}
+  }
+
+  const profile = (typeof UserKnowledgeBase !== 'undefined' && UserKnowledgeBase.getProfile) 
+    ? UserKnowledgeBase.getProfile() 
+    : { name: "Eshwar", coreProjects: ["Jarvis Mobile Assistant"] };
+
+  const projects = profile.coreProjects ? profile.coreProjects.join(', ') : 'Jarvis Assistant';
+
+  return `[System Telemetry | Time: ${timeString}, ${dateString} | Battery: ${batteryStatus} | Boss: ${profile.name || 'Eshwar'} | Projects: ${projects}]`;
+}
+
   getProfile: () => {
     return JSON.parse(localStorage.getItem('jarvis_profile') || JSON.stringify({
       name: "Eshwar",
