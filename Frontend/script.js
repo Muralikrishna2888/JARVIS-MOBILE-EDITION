@@ -328,7 +328,6 @@ function initModelSelector() {
   });
 }
 
-
 let USER_FACTS = [];
 try {
   USER_FACTS = JSON.parse(localStorage.getItem('jarvis_user_facts') || '[]');
@@ -337,8 +336,6 @@ try {
 }
 
 async function requestGeminiInteraction(inputMessage, base64Image = null) {
-  if (!API_KEY) throw new Error('Gemini API key is missing.');
-
   const lower = (inputMessage || '').toLowerCase().trim();
   if (lower.startsWith('play') || lower.startsWith('watch') || lower.startsWith('show me')) {
     if (typeof routeMediaIntent === 'function') {
@@ -351,6 +348,17 @@ async function requestGeminiInteraction(inputMessage, base64Image = null) {
     const toolResult = await handleTools(inputMessage);
     if (toolResult) return toolResult;
   }
+
+  // 👉 Termux Local Brain (TinyLlama) కి నేరుగా రూట్ చేసే లాజిక్
+  if (GEMINI_MODEL === 'local-tinyllama') {
+    if (typeof queryLocalOllama === 'function') {
+      return await queryLocalOllama(inputMessage);
+    } else {
+      throw new Error('Local Ollama engine is not initialized.');
+    }
+  }
+
+  if (!API_KEY) throw new Error('Gemini API key is missing.');
 
   const { GoogleGenAI } = await import('https://esm.run/@google/genai');
   const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -367,17 +375,16 @@ async function requestGeminiInteraction(inputMessage, base64Image = null) {
     currentParts.push({ text: inputMessage });
   }
 
-  MEMORY.push({ role: 'user', parts: currentParts });
+  if (typeof MEMORY !== 'undefined') {
+    MEMORY.push({ role: 'user', parts: currentParts });
+  }
 
-  const factsString = USER_FACTS.length > 0 
-    ? USER_FACTS.map((f, i) => `${i + 1}. ${f}`).join('\n') 
-    : 'No explicit facts recorded yet.';
+  const dynamicTelemetry = (typeof buildDynamicContext === 'function') ? await buildDynamicContext() : '';
+  const storedUserFacts = (typeof UserKnowledgeBase !== 'undefined' && typeof UserKnowledgeBase.getAllFactsFormatted === 'function')
+    ? UserKnowledgeBase.getAllFactsFormatted()
+    : (USER_FACTS.length > 0 ? USER_FACTS.map((f, i) => `${i + 1}. ${f}`).join('\n') : 'No explicit facts recorded yet.');
 
-// --- ADVANCED AGENT COGNITIVE PROMPT ---
-const dynamicTelemetry = await buildDynamicContext();
-const storedUserFacts = UserKnowledgeBase.getAllFactsFormatted();
-
-const jarvisSystemPrompt = `
+  const jarvisSystemPrompt = `
 You are JARVIS (EMIT), an ultra-advanced, sentient-grade personal operating assistant built exclusively for your creator and boss, Eshwar.
 
 [LIVE TELEMETRY & SYSTEM STATE]
@@ -412,15 +419,15 @@ ${storedUserFacts}
    - Limit conversational responses to 1–3 punchy sentences unless deep analysis, code, or structured reasoning is explicitly requested.
 `;
 
-
   let attempts = 3;
   let response = null;
 
   while (attempts > 0) {
     try {
+      const memoryPayload = (typeof MEMORY !== 'undefined') ? MEMORY : [{ role: 'user', parts: currentParts }];
       response = await ai.models.generateContent({
         model: GEMINI_MODEL,
-        contents: MEMORY.map(m => ({
+        contents: memoryPayload.map(m => ({
           role: m.role,
           parts: m.parts || [{ text: m.text || '' }]
         })),
@@ -449,11 +456,13 @@ ${storedUserFacts}
     reply = reply.replace(/\[\[MEMORY_STORE:\s*.*?\]\]/g, '').trim();
   }
 
-  MEMORY.push({ role: 'model', parts: [{ text: reply }] });
-  try {
-    localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
-  } catch (e) {
-    console.error("Memory save failed:", e);
+  if (typeof MEMORY !== 'undefined') {
+    MEMORY.push({ role: 'model', parts: [{ text: reply }] });
+    try {
+      localStorage.setItem('jarvis_memory', JSON.stringify(MEMORY));
+    } catch (e) {
+      console.error("Memory save failed:", e);
+    }
   }
 
   return reply;
