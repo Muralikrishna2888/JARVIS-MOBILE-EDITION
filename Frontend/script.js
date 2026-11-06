@@ -501,7 +501,7 @@ function initJarvisApp() {
     if (!text && !base64Image) return;
     const cleanText = (text || '').trim();
     
-    if (cleanText) saveToHistory(cleanText);
+    if (cleanText && typeof saveToHistory === 'function') saveToHistory(cleanText);
     if (coreStage) coreStage.classList.add('chat-active');
     if (greetingBox) greetingBox.style.display = 'none';
 
@@ -550,7 +550,7 @@ function initJarvisApp() {
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
 
-      if (reply) speakNaturally(reply);
+      if (reply && typeof speakNaturally === 'function') speakNaturally(reply);
     } catch (err) {
       const indicator = document.getElementById('thinking-indicator');
       if (indicator) indicator.remove();
@@ -560,7 +560,6 @@ function initJarvisApp() {
       }
     }
   };
-
 
   triggerJarvisSend = executeSend;
 
@@ -609,6 +608,7 @@ function initJarvisApp() {
   if (historyToggle) {
     historyToggle.addEventListener('click', (e) => {
       e.preventDefault();
+      const convList = (typeof CONVERSATIONS !== 'undefined') ? CONVERSATIONS : [];
       const html = `
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-top:10px;">
           <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
@@ -616,7 +616,7 @@ function initJarvisApp() {
           <span style="font-size:18px;">🔍</span>
         </div>
         <div style="font-size:11px; color:#71717a; font-weight:bold; letter-spacing:1px; margin-bottom:12px;">TODAY</div>
-        ${CONVERSATIONS.filter(c => c.category === 'TODAY').map(c => `
+        ${convList.filter(c => c.category === 'TODAY').map(c => `
           <div style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:10px;">
             <div style="font-weight:500; font-size:15px;">${c.title}</div>
             <div style="font-size:12px; color:#71717a; margin-top:4px;">${c.time}</div>
@@ -662,73 +662,15 @@ function initJarvisApp() {
 
       document.getElementById('set-api-key')?.addEventListener('click', () => {
         const key = prompt("Enter new API Key:", localStorage.getItem('jarvis_key') || '');
-        if (key) { localStorage.setItem('jarvis_key', key); API_KEY = key; alert("API Key saved!"); }
+        if (key) { 
+          localStorage.setItem('jarvis_key', key); 
+          if (typeof API_KEY !== 'undefined') API_KEY = key; 
+          alert("API Key saved!"); 
+        }
       });
     });
   }
 }
-
- * cosY - p.nz * currentRadius * sinY;
-      let z1 = p.nz * currentRadius * cosY + p.nx * currentRadius * sinY;
-      let y1 = p.ny * currentRadius;
-
-      const fov = 250;
-      const scale = fov / (fov + z1);
-      const projX = x1 * scale + cx;
-      const projY = y1 * scale + cy;
-
-      const alpha = Math.max(0.2, (z1 + currentRadius) / (2 * currentRadius));
-      ctx.beginPath();
-      ctx.arc(projX, projY, Math.max(1, (isCoreListening ? 1.8 : 1.4) * scale), 0, Math.PI * 2);
-      ctx.fillStyle = isCoreListening ? `rgba(0, 240, 255, ${alpha})` : `rgba(255, 255, 255, ${alpha})`;
-      ctx.fill();
-    });
-    requestAnimationFrame(render);
-  }
-  render();
-
-  const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
-  if (!SpeechRecognition) return;
-
-  const coreMic = new SpeechRecognition();
-  coreMic.continuous = false;
-  coreMic.interimResults = false;
-  coreMic.lang = 'en-IN';
-
-  canvas.addEventListener('pointerdown', (e) => {
-    e.preventDefault();
-    if ('speechSynthesis' in window) window.speechSynthesis.cancel();
-    
-    if (isCoreListening) {
-      coreMic.stop();
-      isCoreListening = false;
-      return;
-    }
-
-    try {
-      coreMic.start();
-      isCoreListening = true;
-      if ('vibrate' in navigator) navigator.vibrate(40);
-    } catch (err) {
-      console.error(err);
-    }
-  });
-
-  coreMic.onresult = (event) => {
-    let transcript = '';
-    for (let i = event.resultIndex; i < event.results.length; ++i) {
-      transcript += event.results[i][0].transcript;
-    }
-    const cleanText = transcript.trim();
-    if (cleanText && typeof triggerJarvisSend === 'function') {
-      triggerJarvisSend(cleanText);
-    }
-  };
-
-  coreMic.onerror = () => { isCoreListening = false; };
-  coreMic.onend = () => { isCoreListening = false; };
-}
-
 
 // ===== 5. 3D PARTICLE SPHERE & TOUCH MIC =====
 let isCoreListening = false;
