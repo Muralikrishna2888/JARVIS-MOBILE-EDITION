@@ -450,6 +450,8 @@ function initJarvisApp() {
       thinkingBubble.style.cssText = 'color: #3b82f6; font-size: 13px; font-weight: 500; margin: 8px 0; display: flex; align-items: center; gap: 6px;';
       thinkingBubble.innerHTML = `<span>●</span> <em>Thinking it over...</em>`;
       chatContainer.appendChild(thinkingBubble);
+      
+      // యూజర్ మెసేజ్ పంపిన వెంటనే కిందికి స్క్రోల్
       chatContainer.scrollTop = chatContainer.scrollHeight;
     }
 
@@ -468,6 +470,8 @@ function initJarvisApp() {
           </div>
         `;
         chatContainer.appendChild(aiBubble);
+        
+        // బాట్ రిప్లై వచ్చాక కిందికి స్క్రోల్
         chatContainer.scrollTop = chatContainer.scrollHeight;
       }
 
@@ -477,9 +481,11 @@ function initJarvisApp() {
       if (indicator) indicator.remove();
       if (chatContainer) {
         chatContainer.innerHTML += `<div style="color: #ef4444; font-size: 13px; margin: 6px 0;">Error: ${err.message}</div>`;
+        chatContainer.scrollTop = chatContainer.scrollHeight;
       }
     }
   };
+
 
   triggerJarvisSend = executeSend;
 
