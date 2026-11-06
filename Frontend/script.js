@@ -34,40 +34,40 @@ function saveToHistory(userText) {
   CONVERSATIONS.unshift(newEntry);
   localStorage.setItem(HISTORY_KEY, JSON.stringify(CONVERSATIONS));
 }
+
 // 👉 1. User Knowledge Base (Jarvis Memory Profile)
 const UserKnowledgeBase = {
   getProfile: () => {
     return JSON.parse(localStorage.getItem('jarvis_profile') || JSON.stringify({
       name: "Eshwar",
-      role: "Creator & Lead Developer",
-      coreProjects: ["Jarvis Mobile Assistant", "On-Device Reflex Layer"],
-      preferences: { language: "Telugu / English bilingual", defaultMedia: "YouTube for trailers, Spotify for tracks" }
+      role: "Creator & Lead Architect",
+      coreFacts: [
+        "Prefers direct, fluff-free responses.",
+        "Fluent in English and Telugu.",
+        "Primary device: Android smartphone."
+      ]
     }));
   },
-  saveFact: (key, value) => {
+  
+  appendFact: (fact) => {
+    if (!fact) return;
     const profile = UserKnowledgeBase.getProfile();
-    profile[key] = value;
-    localStorage.setItem('jarvis_profile', JSON.stringify(profile));
+    if (!profile.coreFacts) profile.coreFacts = [];
+    if (!profile.coreFacts.includes(fact)) {
+      profile.coreFacts.push(fact);
+      localStorage.setItem('jarvis_profile', JSON.stringify(profile));
+    }
+  },
+
+  // Missing function that caused the error:
+  getAllFactsFormatted: () => {
+    const profile = UserKnowledgeBase.getProfile();
+    const facts = profile.coreFacts || [];
+    if (facts.length === 0) return "No stored facts yet.";
+    return facts.map((fact, idx) => `${idx + 1}. ${fact}`).join('\n');
   }
 };
 
-// 👉 2. Real-time Device Context Engine
-async function buildDynamicContext() {
-  const now = new Date();
-  const timeString = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
-  const dateString = now.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
-  
-  let batteryStatus = 'Unknown';
-  if ('getBattery' in navigator) {
-    try {
-      const b = await navigator.getBattery();
-      batteryStatus = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Discharging'})`;
-    } catch (_) {}
-  }
-
-  const profile = UserKnowledgeBase.getProfile();
-  return `[System Telemetry | Time: ${timeString}, ${dateString} | Battery: ${batteryStatus} | Boss: ${profile.name} | Projects: ${profile.coreProjects.join(', ')}]`;
-}
 
 // ===== 2. DEVICE TOOLS (REFLEX LAYER) =====
 async function handleTools(text) {
