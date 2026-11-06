@@ -107,6 +107,29 @@ body.jarvis-dark {
   border-radius: 4px;
 }
 
+/* చాట్ బాక్స్ రెడ్ లైన్ నుంచి బ్లూ లైన్ మధ్యలోనే స్క్రోల్ అయ్యేలా ఫిక్స్డ్ లేఅవుట్ */
+#chat {
+  position: fixed;
+  top: 280px; /* రెడ్ లైన్ పొజిషన్ - స్పియర్ కింద */
+  bottom: 140px; /* బ్లూ లైన్ పొజిషన్ - ఇన్‌పుట్ బార్ పైన */
+  left: 0;
+  width: 100%;
+  padding: 10px 16px;
+  box-sizing: border-box;
+  overflow-y: auto;
+  overflow-x: hidden;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  z-index: 50;
+  scrollbar-width: none;
+  -webkit-overflow-scrolling: touch;
+}
+
+#chat::-webkit-scrollbar {
+  display: none;
+}
+
 /* Chat Bubbles layout */
 .chat-bubble-user {
   align-self: flex-end;
