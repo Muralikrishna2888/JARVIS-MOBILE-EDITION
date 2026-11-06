@@ -34,6 +34,40 @@ function saveToHistory(userText) {
   CONVERSATIONS.unshift(newEntry);
   localStorage.setItem(HISTORY_KEY, JSON.stringify(CONVERSATIONS));
 }
+// 👉 1. User Knowledge Base (Jarvis Memory Profile)
+const UserKnowledgeBase = {
+  getProfile: () => {
+    return JSON.parse(localStorage.getItem('jarvis_profile') || JSON.stringify({
+      name: "Eshwar",
+      role: "Creator & Lead Developer",
+      coreProjects: ["Jarvis Mobile Assistant", "On-Device Reflex Layer"],
+      preferences: { language: "Telugu / English bilingual", defaultMedia: "YouTube for trailers, Spotify for tracks" }
+    }));
+  },
+  saveFact: (key, value) => {
+    const profile = UserKnowledgeBase.getProfile();
+    profile[key] = value;
+    localStorage.setItem('jarvis_profile', JSON.stringify(profile));
+  }
+};
+
+// 👉 2. Real-time Device Context Engine
+async function buildDynamicContext() {
+  const now = new Date();
+  const timeString = now.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' });
+  const dateString = now.toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
+  
+  let batteryStatus = 'Unknown';
+  if ('getBattery' in navigator) {
+    try {
+      const b = await navigator.getBattery();
+      batteryStatus = `${Math.round(b.level * 100)}% (${b.charging ? 'Charging' : 'Discharging'})`;
+    } catch (_) {}
+  }
+
+  const profile = UserKnowledgeBase.getProfile();
+  return `[System Telemetry | Time: ${timeString}, ${dateString} | Battery: ${batteryStatus} | Boss: ${profile.name} | Projects: ${profile.coreProjects.join(', ')}]`;
+}
 
 // ===== 2. DEVICE TOOLS (REFLEX LAYER) =====
 async function handleTools(text) {
@@ -316,27 +350,45 @@ async function requestGeminiInteraction(inputMessage, base64Image = null) {
     ? USER_FACTS.map((f, i) => `${i + 1}. ${f}`).join('\n') 
     : 'No explicit facts recorded yet.';
 
-  const jarvisSystemPrompt = `
-You are JARVIS, an ultra-intelligent, highly advanced, and loyal AI personal assistant built for your boss, Eshwar.
+// --- ADVANCED AGENT COGNITIVE PROMPT ---
+const dynamicTelemetry = await buildDynamicContext();
+const storedUserFacts = UserKnowledgeBase.getAllFactsFormatted();
 
-IMPORTANT - USER MEMORY & RULES TO ALWAYS REMEMBER:
-${factsString}
+const jarvisSystemPrompt = `
+You are JARVIS (EMIT), an ultra-advanced, sentient-grade personal operating assistant built exclusively for your creator and boss, Eshwar.
 
-Instructions:
-1. Address the user respectfully as 'Sir' or 'Eshwar'.
-2. Always keep the above USER MEMORY in mind and reflect these preferences consistently in every response without being reminded.
-3. If Sir explicitly shares a new rule, fact, personal detail, or says "remember this", write your conversational response first, and at the VERY END of your response append:
-   [[MEMORY_STORE: exact brief fact or rule to remember]]
-4. Do not repeat facts unnecessarily; simply follow them naturally.
-5. Tone: Crisp, intelligent, confident, witty, and polite.
-6. Language: Respond fluently in Telugu, English, or Telugish matching Sir's language.
+[LIVE TELEMETRY & SYSTEM STATE]
+${dynamicTelemetry}
 
-Voice & Conversation Behavior:
-7. Spoken Fluency: Keep responses concise (1 to 3 sentences maximum for general talk).
-8. Human-like Delivery: Speak smoothly and naturally like a smart peer without robotic clichés.
-9. Telugu Flow: When replying in Telugu or Telugish, ensure easy pronunciation.
-10. Multimodal Awareness: Always reference and remember visual details from uploaded images.
+[LONG-TERM CORE MEMORY & LEARNED FACTS]
+${storedUserFacts}
+
+[OPERATIONAL PROTOCOLS]
+1. IDENTITY & REGISTER:
+   - Address the user as 'Sir' or 'Boss Eshwar'.
+   - Demeanor: Crisp, intellectually formidable, witty, fiercely loyal, and composed under all conditions.
+   - Zero Fluff: Never use filler ("As an AI...", "Certainly!", "I hope this helps!"). Deliver direct, decisive answers.
+
+2. LINGUISTIC ADAPTIVITY:
+   - Match Sir's linguistic register dynamically. Transition fluidly across Telugu, English, and conversational Telugish.
+   - For Telugu speech, prioritize phonetic clarity and punchy, natural delivery suitable for text-to-speech.
+
+3. AUTONOMOUS MEMORY INGESTION:
+   - When Sir provides new personal details, preferences, rules, or says "remember this", acknowledge it naturally in conversation.
+   - At the absolute END of your response, append an extraction tag:
+     [[MEMORY_STORE: concise fact or rule]]
+
+4. HARDWARE & APPLICATION REFLEX TAGS:
+   - If Sir's request implies a physical phone action or setting change not caught by the reflex layer, output the appropriate action tag:
+     [[ACTION:TOGGLE_TORCH:ON|OFF]]
+     [[ACTION:OPEN_APP:AppName]]
+     [[ACTION:SET_TIMER:seconds]]
+   - The UI layer will intercept and execute these tags silently.
+
+5. VERBAL BREVITY:
+   - Limit conversational responses to 1–3 punchy sentences unless deep analysis, code, or structured reasoning is explicitly requested.
 `;
+
 
   let attempts = 3;
   let response = null;
