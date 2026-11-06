@@ -669,6 +669,8 @@ function initJarvisApp() {
   if (settingsBtn) {
     settingsBtn.addEventListener('click', (e) => {
       e.preventDefault();
+      const isLocalActive = localStorage.getItem('jarvis_use_local') === 'true';
+
       const html = `
         <div style="display:flex; align-items:center; justify-content:space-between; margin-bottom:24px; padding-top:10px;">
           <span class="back-to-home" style="cursor:pointer; font-size:32px; line-height:1;">‹</span>
@@ -686,6 +688,16 @@ function initJarvisApp() {
         <div id="set-api-key" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
           <span>Gemini API Key</span>
           <span style="color:#888;">Update &gt;</span>
+        </div>
+        <!-- 👉 Termux Local Brain Setting -->
+        <div id="toggle-termux-engine" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
+          <div>
+            <div style="font-weight:500;">Termux Local Brain (Offline)</div>
+            <div style="font-size:12px; color:#71717a;">Use TinyLlama server via localhost</div>
+          </div>
+          <span style="color: ${isLocalActive ? '#10b981' : '#ef4444'}; font-weight: 600;">
+            ${isLocalActive ? 'ENABLED [ON]' : 'DISABLED [OFF]'}
+          </span>
         </div>
       `;
       showFullScreenView(html);
@@ -707,9 +719,17 @@ function initJarvisApp() {
           alert("API Key saved!"); 
         }
       });
+
+      // 👉 టర్మిక్స్ లోకల్ ఇంజిన్ ఆన్ / ఆఫ్ టోగుల్
+      document.getElementById('toggle-termux-engine')?.addEventListener('click', () => {
+        const current = localStorage.getItem('jarvis_use_local') === 'true';
+        localStorage.setItem('jarvis_use_local', (!current).toString());
+        settingsBtn.click();
+      });
     });
   }
 }
+
 
 // ===== 5. 3D PARTICLE SPHERE & TOUCH MIC =====
 let isCoreListening = false;
