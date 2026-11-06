@@ -379,8 +379,9 @@ async function requestGeminiInteraction(inputMessage, base64Image = null) {
     if (toolResult) return toolResult;
   }
 
-  // 👉 Termux Local Brain (TinyLlama) కి నేరుగా రూట్ చేసే లాజిక్
-  if (GEMINI_MODEL === 'local-tinyllama') {
+  // 👉 Termux Local Brain (Settings లో ఆన్ చేసి ఉంటే లోకల్ ఇంజిన్‌కి వెళ్తుంది)
+  const useLocal = localStorage.getItem('jarvis_use_local') === 'true';
+  if (useLocal) {
     if (typeof queryLocalOllama === 'function') {
       return await queryLocalOllama(inputMessage);
     } else {
