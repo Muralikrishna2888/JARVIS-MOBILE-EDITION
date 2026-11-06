@@ -215,7 +215,8 @@ if (!API_KEY) {
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
 }
 
-let GEMINI_MODEL = localStorage.getItem('jarvis_selected_model') || 'gemini-1.5-flash';
+// 404 రాకుండా డీఫాల్ట్ మోడల్‌ని gemini-2.5-flash కి సెట్ చేశాం
+let GEMINI_MODEL = localStorage.getItem('jarvis_selected_model') || 'gemini-2.5-flash';
 let GEMINI_MODEL_LABEL = localStorage.getItem('jarvis_selected_label') || 'Jarvis 1.5 mini';
 
 function initModelSelector() {
@@ -269,6 +270,7 @@ function initModelSelector() {
     }
   });
 }
+
 
 let USER_FACTS = [];
 try {
