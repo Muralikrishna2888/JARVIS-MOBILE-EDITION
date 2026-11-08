@@ -92,25 +92,32 @@ async function buildDynamicContext() {
 }
 
 // 👉 3. Termux Ollama Local Brain API Engine (Offline Mode)
-async function queryLocalOllama(promptText) {
-  const telemetry = await buildDynamicContext();
-  const fullPrompt = `${telemetry}\nUser: ${promptText}\nAssistant:`;
+async function requestLocalBrain(promptText) {
+  try {
+    const response = await fetch('http://127.0.0.1:11434/api/generate', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        model: 'llama3.2:1b', // Termux లో ఉన్న మోడల్ పేరు
+        prompt: promptText,
+        stream: false
+      })
+    });
 
-  const response = await fetch('http://127.0.0.1:11434/api/generate', {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'tinyllama',
-      prompt: fullPrompt,
-      stream: false
-    })
-  });
+    if (!response.ok) {
+      throw new Error(`Server returned ${response.status}`);
+    }
 
-  if (!response.ok) {
-    throw new Error(`Local Brain Server Error: ${response.status}`);
+    const data = await response.json();
+    return data.response;
+  } catch (err) {
+    console.error("Local Brain Error:", err);
+    throw new Error("Local Brain Server Error: " + err.message);
   }
+}
+
 
   const data = await response.json();
   return data.response.trim();
