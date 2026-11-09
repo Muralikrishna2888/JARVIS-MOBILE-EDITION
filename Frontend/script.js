@@ -91,20 +91,6 @@ async function buildDynamicContext() {
   return `[System Telemetry | Time: ${timeString}, ${dateString} | Battery: ${batteryStatus} | Boss: ${profile.name || 'Eshwar'} | Projects: ${projects}]`;
 }
 
-// 👉 3. Termux Ollama Local Brain API Engine (Offline Mode)
-async function requestLocalBrain(promptText) {
-  try {
-    const response = await fetch('http://127.0.0.1:11434/api/generate', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        model: 'llama3.2:1b', // Termux లో ఉన్న మోడల్ పేరు
-        prompt: promptText,
-        stream: false
-      })
-    });
 
     if (!response.ok) {
       throw new Error(`Server returned ${response.status}`);
