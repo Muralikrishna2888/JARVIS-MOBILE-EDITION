@@ -197,53 +197,48 @@ async function handleTools(text) {
     return `Opening Play Store to install ${installMatch[1].trim()}, Sir.`;
   }
 
-      // App Launcher (Direct android-app:// URI Scheme)
+  // App Launcher (100% Direct Deep-Link Schemes - No Play Store Redirect)
   const appMatch = t.match(/(?:open|launch|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (appMatch) {
     const app = appMatch[1].trim().toLowerCase();
 
-    const appPackages = {
-      'youtube': 'com.google.android.youtube',
-      'spotify': 'com.spotify.music',
-      'whatsapp': 'com.whatsapp',
-      'instagram': 'com.instagram.android',
-      'facebook': 'com.facebook.katana',
-      'chrome': 'com.android.chrome',
-      'camera': 'com.android.camera',
-      'settings': 'com.android.settings',
-      'candy crush': 'com.king.candycrushsaga',
-      'candy crush saga': 'com.king.candycrushsaga',
-      'free fire': 'com.dts.freefireth',
-      'free fire max': 'com.dts.freefiremax',
-      'bgmi': 'com.pubg.imobile',
-      'telegram': 'org.telegram.messenger',
-      'snapchat': 'com.snapchat.android',
-      'twitter': 'com.twitter.android',
-      'x': 'com.twitter.android',
-      'gmail': 'com.google.android.gm',
-      'maps': 'com.google.android.apps.maps',
-      'google maps': 'com.google.android.apps.maps',
-      'calculator': 'com.google.android.calculator',
-      'clock': 'com.google.android.deskclock',
-      'phonepe': 'com.phonepe.app',
-      'gpay': 'com.google.android.apps.nbu.paisa.user',
-      'google pay': 'com.google.android.apps.nbu.paisa.user',
-      'paytm': 'net.one97.paytm',
-      'termux': 'com.termux',
-      'acode': 'com.foxdebug.acodefree'
+    const directSchemes = {
+      'youtube': 'vnd.youtube://',
+      'spotify': 'spotify://',
+      'whatsapp': 'whatsapp://send',
+      'instagram': 'instagram://app',
+      'facebook': 'fb://',
+      'telegram': 'tg://',
+      'snapchat': 'snapchat://',
+      'twitter': 'twitter://',
+      'x': 'twitter://',
+      'phonepe': 'phonepe://',
+      'gpay': 'tez://upi/',
+      'google pay': 'tez://upi/',
+      'paytm': 'paytmmp://',
+      'maps': 'geo:0,0',
+      'google maps': 'geo:0,0',
+      'candy crush': 'candycrushsaga://',
+      'candy crush saga': 'candycrushsaga://',
+      'free fire': 'freefire://',
+      'free fire max': 'freefiremax://',
+      'bgmi': 'pubgmobile://',
+      'settings': 'intent:#Intent;action=android.settings.SETTINGS;end',
+      'camera': 'intent:#Intent;action=android.media.action.IMAGE_CAPTURE;end',
+      'clock': 'intent:#Intent;action=android.intent.action.SHOW_ALARMS;end',
+      'gallery': 'content://media/internal/images/media'
     };
 
-    const pkg = appPackages[app];
-    if (pkg) {
-      window.location.href = `android-app://${pkg}/`;
+    if (directSchemes[app]) {
+      window.location.href = directSchemes[app];
       return `Opening ${appMatch[1].trim()}, Sir.`;
     } else {
-      const cleanPkg = app.replace(/\s+/g, '');
-      window.location.href = `android-app://com.${cleanPkg}/`;
-      return `Opening ${appMatch[1].trim()}, Sir.`;
+      // స్కీమ్ లేని ఇతర యాప్స్ కోసం Play Store లో "Open" బటన్ ఉన్న పేజీ ఓపెన్ అవుతుంది
+      const query = encodeURIComponent(app);
+      window.location.href = `market://search?q=${query}&c=apps`;
+      return `Opening ${appMatch[1].trim()} via store, Sir.`;
     }
   }
-
 
   // Alarm Setter
   if (t.includes('alarm') || t.includes('అలారం')) {
