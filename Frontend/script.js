@@ -197,15 +197,51 @@ async function handleTools(text) {
     return `Opening Play Store to install ${installMatch[1].trim()}, Sir.`;
   }
 
-  // App Launcher
+    // App Launcher (Smart Package Mapper)
   const appMatch = t.match(/(?:open|launch|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (appMatch) {
     const app = appMatch[1].trim().toLowerCase();
-    if (app === 'youtube') { window.location.href = 'vnd.youtube:'; return 'Opening YouTube, Sir.'; }
-    if (app === 'spotify') { window.location.href = 'spotify:'; return 'Opening Spotify, Sir.'; }
-    window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${app};end`;
-    return `Launching ${app}, Sir.`;
+
+    const appPackages = {
+      'youtube': 'com.google.android.youtube',
+      'spotify': 'com.spotify.music',
+      'whatsapp': 'com.whatsapp',
+      'instagram': 'com.instagram.android',
+      'facebook': 'com.facebook.katana',
+      'chrome': 'com.android.chrome',
+      'camera': 'com.android.camera',
+      'settings': 'com.android.settings',
+      'candy crush': 'com.king.candycrushsaga',
+      'candy crush saga': 'com.king.candycrushsaga',
+      'free fire': 'com.dts.freefireth',
+      'bgmi': 'com.pubg.imobile',
+      'telegram': 'org.telegram.messenger',
+      'snapchat': 'com.snapchat.android',
+      'twitter': 'com.twitter.android',
+      'x': 'com.twitter.android',
+      'gmail': 'com.google.android.gm',
+      'maps': 'com.google.android.apps.maps',
+      'google maps': 'com.google.android.apps.maps',
+      'calculator': 'com.google.android.calculator',
+      'clock': 'com.google.android.deskclock',
+      'phonepe': 'com.phonepe.app',
+      'gpay': 'com.google.android.apps.nbu.paisa.user',
+      'google pay': 'com.google.android.apps.nbu.paisa.user',
+      'paytm': 'net.one97.paytm'
+    };
+
+    const pkg = appPackages[app];
+    if (pkg) {
+      window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${pkg};end`;
+      return `Launching ${appMatch[1].trim()}, Sir.`;
+    } else {
+      // List lo leni kotha app aithe space lekunda try chesthundhi
+      const cleanPkg = app.replace(/\s+/g, '');
+      window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${cleanPkg};end`;
+      return `Launching ${appMatch[1].trim()}, Sir.`;
+    }
   }
+  
 
   // Alarm Setter
   if (t.includes('alarm') || t.includes('అలారం')) {
