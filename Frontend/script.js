@@ -197,7 +197,7 @@ async function handleTools(text) {
     return `Opening Play Store to install ${installMatch[1].trim()}, Sir.`;
   }
 
-    // App Launcher (Smart Package Mapper)
+      // App Launcher (Direct android-app:// URI Scheme)
   const appMatch = t.match(/(?:open|launch|ఓపెన్)\s+([a-zA-Z0-9_\s]+)/i);
   if (appMatch) {
     const app = appMatch[1].trim().toLowerCase();
@@ -214,6 +214,7 @@ async function handleTools(text) {
       'candy crush': 'com.king.candycrushsaga',
       'candy crush saga': 'com.king.candycrushsaga',
       'free fire': 'com.dts.freefireth',
+      'free fire max': 'com.dts.freefiremax',
       'bgmi': 'com.pubg.imobile',
       'telegram': 'org.telegram.messenger',
       'snapchat': 'com.snapchat.android',
@@ -227,21 +228,22 @@ async function handleTools(text) {
       'phonepe': 'com.phonepe.app',
       'gpay': 'com.google.android.apps.nbu.paisa.user',
       'google pay': 'com.google.android.apps.nbu.paisa.user',
-      'paytm': 'net.one97.paytm'
+      'paytm': 'net.one97.paytm',
+      'termux': 'com.termux',
+      'acode': 'com.foxdebug.acodefree'
     };
 
     const pkg = appPackages[app];
     if (pkg) {
-      window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=${pkg};end`;
-      return `Launching ${appMatch[1].trim()}, Sir.`;
+      window.location.href = `android-app://${pkg}/`;
+      return `Opening ${appMatch[1].trim()}, Sir.`;
     } else {
-      // List lo leni kotha app aithe space lekunda try chesthundhi
       const cleanPkg = app.replace(/\s+/g, '');
-      window.location.href = `intent:#Intent;action=android.intent.action.MAIN;category=android.intent.category.LAUNCHER;package=com.${cleanPkg};end`;
-      return `Launching ${appMatch[1].trim()}, Sir.`;
+      window.location.href = `android-app://com.${cleanPkg}/`;
+      return `Opening ${appMatch[1].trim()}, Sir.`;
     }
   }
-  
+
 
   // Alarm Setter
   if (t.includes('alarm') || t.includes('అలారం')) {
