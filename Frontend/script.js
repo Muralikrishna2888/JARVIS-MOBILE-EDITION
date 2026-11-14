@@ -284,14 +284,24 @@ function playOnSpotify(searchQuery) {
 }
 
 function triggerAndroidOrWebIntent(deepLink, webUrl) {
-  try {
-    window.location.href = deepLink;
-    setTimeout(() => {
+  let appOpened = false;
+
+  const handleVisibilityChange = () => {
+    if (document.hidden) {
+      appOpened = true;
+    }
+  };
+
+  document.addEventListener('visibilitychange', handleVisibilityChange);
+  window.location.href = deepLink;
+
+  setTimeout(() => {
+    document.removeEventListener('visibilitychange', handleVisibilityChange);
+    // App mobile lo open kakapothene browser lo open chesthundhi
+    if (!appOpened && !document.hidden) {
       window.open(webUrl, '_blank');
-    }, 500);
-  } catch (err) {
-    window.open(webUrl, '_blank');
-  }
+    }
+  }, 1500);
 }
 
 
