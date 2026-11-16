@@ -380,7 +380,7 @@ function triggerAndroidOrWebIntent(deepLink, webUrl) {
 
 
 // ===== 3. GEMINI SETUP & SECURE MODEL SELECTOR =====
-let API_KEY = localStorage.getItem('jarvis_key');
+let API_KEY = localStorage.getItem('jarvis_key') || '';
 if (!API_KEY) {
   API_KEY = prompt('Enter your Gemini API Key:');
   if (API_KEY) localStorage.setItem('jarvis_key', API_KEY);
@@ -481,8 +481,12 @@ async function requestGeminiInteraction(inputMessage, base64Image = null) {
     }
   }
   
-  if (!API_KEY) throw new Error('Gemini API key is missing.');
-
+  if (!API_KEY) {
+    API_KEY = prompt('Enter your Gemini API Key:');
+    if (API_KEY) localStorage.setItem('jarvis_key', API_KEY.trim());
+    else throw new Error('Gemini API key is missing, Sir.');
+  }
+  
   const { GoogleGenAI } = await import('https://esm.run/@google/genai');
   const ai = new GoogleGenAI({ apiKey: API_KEY });
 
