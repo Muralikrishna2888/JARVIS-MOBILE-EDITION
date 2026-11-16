@@ -115,47 +115,6 @@ async function queryLocalOllama(promptText) {
   const data = await response.json();
   return data.response.trim();
 }
-// 👉 4. Cerebras Ultra-Fast Inference Engine
-async function queryCerebrasFast(promptText) {
-  const CEREBRAS_KEY = localStorage.getItem('jarvis_cerebras_key');
-  if (!CEREBRAS_KEY) {
-    throw new Error('Cerebras API Key missing! Set it in Settings, Sir.');
-  }
-
-  const telemetry = (typeof buildDynamicContext === 'function') ? await buildDynamicContext() : '';
-  const storedFacts = (typeof UserKnowledgeBase !== 'undefined') ? UserKnowledgeBase.getAllFactsFormatted() : '';
-
-  const systemMsg = `You are JARVIS (EMIT), a hyper-fast, witty personal AI built for Boss Eshwar.
-${telemetry}
-[USER FACTS]
-${storedFacts}
-Rules: Address user as 'Sir' or 'Boss Eshwar'. Match Telugu/English naturally. Keep replies crisp (1-3 sentences) with zero fluff.`;
-
-  const res = await fetch('https://api.cerebras.ai/v1/chat/completions', {
-    method: 'POST',
-    headers: {
-      'Authorization': `Bearer ${CEREBRAS_KEY}`,
-      'Content-Type': 'application/json'
-    },
-    body: JSON.stringify({
-      model: 'llama-3.3-70b',
-      messages: [
-        { role: 'system', content: systemMsg },
-        { role: 'user', content: promptText }
-      ],
-      temperature: 0.7,
-      max_tokens: 512
-    })
-  });
-
-  if (!res.ok) {
-    const errText = await res.text();
-    throw new Error(`Cerebras Error (${res.status}): ${errText}`);
-  }
-
-  const data = await res.json();
-  return data.choices[0].message.content.trim();
-}
 
 // ===== 2. DEVICE TOOLS (REFLEX LAYER) =====
 async function handleTools(text) {
@@ -472,20 +431,8 @@ async function requestGeminiInteraction(inputMessage, base64Image = null) {
       throw new Error('Local Ollama engine is not initialized.');
     }
   }
-  // 👉 Cerebras Hyper-Speed Routing
-  if (GEMINI_MODEL === 'cerebras-llama') {
-    if (typeof queryCerebrasFast === 'function') {
-      return await queryCerebrasFast(inputMessage);
-    } else {
-      throw new Error('Cerebras engine is not initialized.');
-    }
-  }
-  
-  if (!API_KEY) {
-    API_KEY = prompt('Enter your Gemini API Key:');
-    if (API_KEY) localStorage.setItem('jarvis_key', API_KEY.trim());
-    else throw new Error('Gemini API key is missing, Sir.');
-  }
+
+  if (!API_KEY) throw new Error('Gemini API key is missing.');
   
   const { GoogleGenAI } = await import('https://esm.run/@google/genai');
   const ai = new GoogleGenAI({ apiKey: API_KEY });
@@ -786,10 +733,7 @@ function initJarvisApp() {
           <span>Gemini API Key</span>
           <span style="color:#888;">Update &gt;</span>
         </div>
-                <div id="set-cerebras-key" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
-          <span>Cerebras API Key (Fast)</span>
-          <span style="color:#38bdf8;">${localStorage.getItem('jarvis_cerebras_key') ? 'Saved ✓' : 'Add Key &gt;'}</span>
-        </div>
+                
         
         <!-- 👉 Termux Local Brain Setting -->
         <div id="toggle-termux-engine" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
@@ -821,14 +765,7 @@ function initJarvisApp() {
           alert("API Key saved!"); 
         }
       });
-      document.getElementById('set-cerebras-key')?.addEventListener('click', () => {
-        const key = prompt("Enter Cerebras API Key (csk-...):", localStorage.getItem('jarvis_cerebras_key') || '');
-        if (key) {
-          localStorage.setItem('jarvis_cerebras_key', key.trim());
-          alert("Cerebras API Key saved, Sir!");
-          settingsBtn.click();
-        }
-      });
+      
       
       // 👉 టర్మిక్స్ లోకల్ ఇంజిన్ ఆన్ / ఆఫ్ టోగుల్
       document.getElementById('toggle-termux-engine')?.addEventListener('click', () => {
