@@ -733,7 +733,10 @@ function initJarvisApp() {
           <span>Gemini API Key</span>
           <span style="color:#888;">Update &gt;</span>
         </div>
-                
+        <div id="set-groq-key" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; cursor:pointer;">
+          <span>EMIT Core API Key (Groq)</span>
+          <span style="color:#38bdf8;">${localStorage.getItem('jarvis_groq_key') ? 'Saved ✓' : 'Add Key &gt;'}</span>
+        </div>
         
         <!-- 👉 Termux Local Brain Setting -->
         <div id="toggle-termux-engine" style="background:#18181b; padding:16px; border-radius:14px; margin-bottom:12px; display:flex; justify-content:space-between; align-items:center; cursor:pointer;">
@@ -763,6 +766,14 @@ function initJarvisApp() {
           localStorage.setItem('jarvis_key', key); 
           if (typeof API_KEY !== 'undefined') API_KEY = key; 
           alert("API Key saved!"); 
+        }
+      });
+            document.getElementById('set-groq-key')?.addEventListener('click', () => {
+        const key = prompt("Enter EMIT Core (Groq) API Key (gsk_...):", localStorage.getItem('jarvis_groq_key') || '');
+        if (key) {
+          localStorage.setItem('jarvis_groq_key', key.trim());
+          alert("EMIT Core API Key saved, Sir!");
+          settingsBtn.click();
         }
       });
       
