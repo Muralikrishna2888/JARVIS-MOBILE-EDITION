@@ -777,7 +777,7 @@ function initJarvisApp() {
         }
       });
       
-      
+     
       // 👉 టర్మిక్స్ లోకల్ ఇంజిన్ ఆన్ / ఆఫ్ టోగుల్
       document.getElementById('toggle-termux-engine')?.addEventListener('click', () => {
         const current = localStorage.getItem('jarvis_use_local') === 'true';
@@ -786,6 +786,37 @@ function initJarvisApp() {
       });
     });
   }
+}
+// ===== GROQ EMIT ENGINE =====
+async function queryGroqFast(promptText) {
+  const groqKey = localStorage.getItem('jarvis_groq_key');
+  if (!groqKey) throw new Error("Settings లో EMIT Core API Key (Groq) యాడ్ చేయండి, Sir!");
+
+  const res = await fetch("https://api.groq.com/openai/v1/chat/completions", {
+    method: "POST",
+    headers: {
+      "Authorization": `Bearer ${groqKey}`,
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({
+      model: "llama-3.3-70b-versatile",
+      messages: [
+        { role: "system", content: "You are J.A.R.V.I.S (EMIT), a smart personal AI assistant for Eshwar. Address him as Sir. Reply concisely in natural Telugu-English mix." },
+        { role: "user", content: promptText }
+      ]
+    })
+  });
+  const data = await res.json();
+  if (!res.ok || data.error) throw new Error(data.error?.message || "Groq API Error");
+  return data.choices[0].message.content;
+}
+
+// ===== BROWSER OFFLINE BRAIN (NO TERMUX NEEDED) =====
+async function queryBrowserOfflineBrain(promptText) {
+  if (!window.loadBrowserOfflineAI) throw new Error("Offline engine loading...");
+  const pipe = await window.loadBrowserOfflineAI();
+  const out = await pipe(`Answer briefly as JARVIS: ${promptText}`, { max_new_tokens: 120 });
+  return out[0].generated_text;
 }
 
 
